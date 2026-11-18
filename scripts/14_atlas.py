@@ -1,14 +1,20 @@
-"""Build the interactive 'Kampala Heat Atlas' (single self-contained HTML page).
+"""Write the data for the 'Kampala Heat Atlas' page (the page itself is the React app in web/).
 
-    python scripts/14_atlas.py <output_dir>
+    python scripts/14_atlas.py <output_dir>          # scripts/17_build_site.py passes docs/
 
-Every raster layer is rendered as a transparent PNG on the shared 30 m grid (same bounds), shown
-over the FABDEM hillshade in Leaflet (CRS.Simple, pan/zoom). Headline numbers are read from the
-result tables so the page always matches the latest run.
+Writes <output_dir>/atlas/:
+  atlas.json        grid size, years, headline numbers, legend ramps, and the layer, chart and
+                    animation list with each file's path (the contract is web/src/atlas/types.ts)
+  base.jpg          FABDEM hillshade
+  layers/<id>.png   every raster layer as a transparent PNG on the shared 30 m grid (same bounds),
+                    shown over the hillshade in Leaflet (CRS.Simple, pan/zoom)
+  charts/<id>.png, anims/<id>.gif   the module figures
+
+Headline numbers are read from the result tables so the page always matches the latest run.
 """
-import base64
 import io
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -23,7 +29,10 @@ from kampala import config
 from kampala import viz as V
 from kampala.config import DATA, OUTPUTS, FIGURES
 
-OUT = Path(sys.argv[1]); OUT.mkdir(parents=True, exist_ok=True)
+OUT = Path(sys.argv[1]) / "atlas"
+shutil.rmtree(OUT, ignore_errors=True)                     # generated folder: start clean, no stale layers
+for d in ("layers", "charts", "anims"):
+    (OUT / d).mkdir(parents=True, exist_ok=True)
 P, TAB, FIG = DATA / "processed", OUTPUTS / "tables", FIGURES
 EP = config.load()["epochs"]; Y = [s["year"] for s in EP.values()]
 
@@ -40,12 +49,18 @@ def fit(a):
     return out
 
 
-def png(rgba, max_w=1100):
+def save(rel, im, fmt, **kw):
+    """Write an image under OUT and return its path relative to OUT, as listed in atlas.json."""
+    buf = io.BytesIO(); im.save(buf, fmt, **kw)
+    (OUT / rel).write_bytes(buf.getvalue())
+    return rel
+
+
+def png(rgba, name, max_w=1100):
     im = Image.fromarray((np.clip(rgba, 0, 1) * 255).astype("uint8"), "RGBA")
     if im.width > max_w:
         im = im.resize((max_w, round(im.height * max_w / im.width)), Image.NEAREST)
-    buf = io.BytesIO(); im.save(buf, "PNG", optimize=True)
-    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+    return save(f"layers/{name}.png", im, "PNG", optimize=True)
 
 
 def classes(a, colors):
@@ -71,22 +86,21 @@ g = np.clip((hs - np.nanpercentile(hs, 2)) / (np.nanpercentile(hs, 98) - np.nanp
 base = np.dstack([0.55 + 0.4 * g] * 3 + [np.ones_like(g)])
 _im = Image.fromarray((base[..., :3] * 255).astype("uint8"), "RGB")
 _im = _im.resize((1100, round(_im.height * 1100 / _im.width)), Image.LANCZOS)
-_buf = io.BytesIO(); _im.save(_buf, "JPEG", quality=78)
-BASE = "data:image/jpeg;base64," + base64.b64encode(_buf.getvalue()).decode()   # opaque base -> JPEG
+BASE = save("base.jpg", _im, "JPEG", quality=78)   # opaque base -> JPEG
 
 for ep, s in EP.items():
-    layers[f"thermal-{s['year']}"] = png(classes(fit(rd(P / "m2" / f"thermal_classes_{ep}_{s['year']}_30m.tif")), V.THERMAL.colors))
+    layers[f"thermal-{s['year']}"] = png(classes(fit(rd(P / "m2" / f"thermal_classes_{ep}_{s['year']}_30m.tif")), V.THERMAL.colors), f"thermal-{s['year']}")
 a1 = fit(rd(P / "m2" / f"lst_landsat_t1_{Y[0]}_30m.tif", 2)); a3 = fit(rd(P / "m2" / f"lst_landsat_t3_{Y[2]}_30m.tif", 2))
 lc25 = fit(rd(P / "m1" / f"landcover_t3_{Y[2]}_10m.tif", 1, 3))
-layers["lst-change"] = png(continuous(a3 - a1, V.DIVERGING, -4, 4, (lc25 == 7) | ~np.isfinite(a3 - a1)))
-layers["lst-2025"] = png(continuous(a3, V.DIVERGING, -8, 8, (lc25 == 7) | ~np.isfinite(a3)))
-layers["landcover-2017"] = png(classes(fit(rd(P / "m1" / f"landcover_t1_{Y[0]}_10m.tif", 1, 3)), V.LANDCOVER))
-layers["landcover-2025"] = png(classes(lc25, V.LANDCOVER))
-layers["growth"] = png(classes(fit(rd(P / "m1" / "growth_frontier_10m.tif", 1, 3)), ["#a9a8a0", V.ORANGES[3], V.REDS[5]]))
+layers["lst-change"] = png(continuous(a3 - a1, V.DIVERGING, -4, 4, (lc25 == 7) | ~np.isfinite(a3 - a1)), "lst-change")
+layers["lst-2025"] = png(continuous(a3, V.DIVERGING, -8, 8, (lc25 == 7) | ~np.isfinite(a3)), "lst-2025")
+layers["landcover-2017"] = png(classes(fit(rd(P / "m1" / f"landcover_t1_{Y[0]}_10m.tif", 1, 3)), V.LANDCOVER), "landcover-2017")
+layers["landcover-2025"] = png(classes(lc25, V.LANDCOVER), "landcover-2025")
+layers["growth"] = png(classes(fit(rd(P / "m1" / "growth_frontier_10m.tif", 1, 3)), ["#a9a8a0", V.ORANGES[3], V.REDS[5]]), "growth")
 inf = np.kron(rd(P / "m3" / f"settlement_groups_t3_{Y[2]}_90m.tif"), np.ones((3, 3), dtype="uint8"))
-layers["informal-2025"] = png(classes(fit((inf == 1).astype("uint8")), ["#1b1b1f"]))
+layers["informal-2025"] = png(classes(fit((inf == 1).astype("uint8")), ["#1b1b1f"]), "informal-2025")
 layers["trees"] = png(classes(fit(rd(P / "m4" / "tree_priority_classes_30m.tif")),
-                              [V.GREENS[1], V.GREENS[2], V.GREENS[4], V.GREENS[6]]))
+                              [V.GREENS[1], V.GREENS[2], V.GREENS[4], V.GREENS[6]]), "trees")
 
 # rooftop solar density: GWh per km2 on 240 m blocks of the master grid
 sol = pd.read_parquet(P / "m5" / "rooftop_solar_buildings.parquet")
@@ -100,19 +114,18 @@ k = 8
 hb, wb = H // k, W // k
 blk = grid[:hb * k, :wb * k].reshape(hb, k, wb, k).sum(axis=(1, 3)) / 1e6 / ((k * 30) ** 2 / 1e6)
 sd = fit(np.kron(blk, np.ones((k, k))))
-layers["solar"] = png(continuous(sd, V.seq(V.ORANGES), 0, float(np.percentile(blk[blk > 0], 99)), sd < 0.5))
+layers["solar"] = png(continuous(sd, V.seq(V.ORANGES), 0, float(np.percentile(blk[blk > 0], 99)), sd < 0.5), "solar")
 solar_max = float(np.percentile(blk[blk > 0], 99))
 
 
-def img_b64(path, width=900):
+def chart(name, path, width=900):
     im = Image.open(path)
     if im.width > width:
         im = im.resize((width, round(im.height * width / im.width)), Image.LANCZOS)
-    buf = io.BytesIO(); im.convert("RGB").quantize(256).save(buf, "PNG", optimize=True)
-    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+    return save(f"charts/{name}.png", im.convert("RGB").quantize(256), "PNG", optimize=True)
 
 
-def gif_b64(path, width=520, every=1):
+def anim(name, path, width=520, every=1):
     im = Image.open(path); frames, durs = [], []
     try:
         while True:
@@ -122,18 +135,15 @@ def gif_b64(path, width=520, every=1):
             im.seek(im.tell() + 1)
     except EOFError:
         pass
-    buf = io.BytesIO()
-    frames[0].save(buf, "GIF", save_all=True, append_images=frames[1:], duration=durs, loop=0, optimize=True)
-    return "data:image/gif;base64," + base64.b64encode(buf.getvalue()).decode()
+    return save(f"anims/{name}.gif", frames[0], "GIF", save_all=True, append_images=frames[1:], duration=durs, loop=0, optimize=True)
 
 
-charts = {n: img_b64(FIG / f) for n, f in {
+charts = {n: chart(n, FIG / f) for n, f in {
     "lcz": "fig_m2_lcz_dumbbell.png", "traj": "fig_m3_trajectories.png", "class": "fig_m1_class_change.png",
     "solar": "fig_m5_scenarios.png", "trees": "fig_m4_priority_bars.png", "cube": "fig_m0_cube_cbd.png"}.items()}
-anims = {"wind": gif_b64(FIG / "anim_m0_diurnal_wind.gif", 440), "cube": gif_b64(FIG / "anim_m0_cube_rotate.gif", 460, every=2)}
-for _k, _v in {**{f"layer:{a}": b for a, b in layers.items()}, **{f"chart:{a}": b for a, b in charts.items()},
-               **{f"anim:{a}": b for a, b in anims.items()}, "base": BASE}.items():
-    print(f"  {_k:24s} {len(_v) / 1e6:.2f} MB")
+anims = {"wind": anim("wind", FIG / "anim_m0_diurnal_wind.gif", 440), "cube": anim("cube", FIG / "anim_m0_cube_rotate.gif", 460, every=2)}
+for _f in sorted(OUT.rglob("*.*")):
+    print(f"  {_f.relative_to(OUT)!s:26s} {_f.stat().st_size / 1e6:.2f} MB")
 
 # ---- numbers
 area = pd.read_csv(TAB / "m1_class_area.csv", index_col=0)
@@ -192,15 +202,10 @@ legend_ramps = {
     "diverging": "linear-gradient(90deg," + ",".join(V.BLUE[::-1][:6] + [V.NEUTRAL] + V.REDS[1:]) + ")",
     "sequential": "linear-gradient(90deg," + ",".join(V.ORANGES) + ")",
 }
-page = (Path(__file__).parent / "atlas_template.html").read_text()
-css = (Path(__file__).parent / "vendor" / "leaflet-1.9.4.min.css").read_text()   # Leaflet's own CSS, BSD-2
-data = dict(base=BASE, layers=layers, meta=[dict(id=i, group=gp, label=lb, kind=kd, legend=lg, caption=cp)
-                                           for i, gp, lb, kd, lg, cp in LAYERS],
-            ramps=legend_ramps, size=[H, W])
-html = (page.replace("/*LEAFLET_CSS*/", css).replace("__DATA__", json.dumps(data))
-        .replace("__CHARTS__", json.dumps(charts)).replace("__ANIMS__", json.dumps(anims)))
-for k_, v in num.items():
-    html = html.replace("{{" + k_ + "}}", v)
-html = html.replace("{{y0}}", str(Y[0])).replace("{{y1}}", str(Y[1])).replace("{{y2}}", str(Y[2]))
-(OUT / "kampala_heat_atlas.html").write_text(html)
-print(f"wrote {OUT / 'kampala_heat_atlas.html'} ({len(html) / 1e6:.1f} MB)")
+manifest = dict(
+    size=[H, W], years=Y, numbers=num, ramps=legend_ramps, base=BASE,
+    layers=[dict(id=i, group=gp, label=lb, kind=kd, legend=lg, caption=cp, src=layers[i]) for i, gp, lb, kd, lg, cp in LAYERS],
+    charts=charts, anims=anims,
+)
+(OUT / "atlas.json").write_text(json.dumps(manifest, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+print(f"wrote {OUT} ({sum(f.stat().st_size for f in OUT.rglob('*.*')) / 1e6:.1f} MB)")

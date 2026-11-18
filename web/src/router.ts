@@ -1,13 +1,20 @@
 import { useEffect, useState } from "react";
 
 // Hash routes (#/site-weather/kampala) work on GitHub Pages without any server rewrites.
-export type Route = { page: "sites" } | { page: "site"; slug: string } | { page: "missing"; path: string };
+export type Route =
+  | { page: "atlas"; section?: string }
+  | { page: "sites" }
+  | { page: "site"; slug: string }
+  | { page: "missing"; path: string };
+
+const NAME = /^[a-z0-9-]+$/;
 
 export function parseRoute(hash: string): Route {
-  const parts = hash.replace(/^#\/?/, "").split("/").filter(Boolean);
-  if (parts.length === 0 || (parts.length === 1 && parts[0] === "site-weather")) return { page: "sites" };
-  if (parts.length === 2 && parts[0] === "site-weather" && /^[a-z0-9-]+$/.test(parts[1] ?? "")) {
-    return { page: "site", slug: parts[1] ?? "" };
+  const [first, second, ...rest] = hash.replace(/^#\/?/, "").split("/").filter(Boolean);
+  if (rest.length === 0) {
+    if (first === undefined) return { page: "atlas" };
+    if (first === "atlas") return second === undefined ? { page: "atlas" } : NAME.test(second) ? { page: "atlas", section: second } : { page: "missing", path: hash };
+    if (first === "site-weather") return second === undefined ? { page: "sites" } : NAME.test(second) ? { page: "site", slug: second } : { page: "missing", path: hash };
   }
   return { page: "missing", path: hash };
 }

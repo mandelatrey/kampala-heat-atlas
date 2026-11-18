@@ -1,0 +1,324 @@
+{
+ "size": [
+  1659,
+  1856
+ ],
+ "years": [
+  2017,
+  2021,
+  2025
+ ],
+ "numbers": {
+  "builtpct": "38",
+  "built0": "658",
+  "built2": "909",
+  "hot2": "236",
+  "hot0": "220",
+  "inf": "6.3",
+  "formal": "5.3",
+  "treecool": "1.4",
+  "newcanopy": "50",
+  "treepeople": "554",
+  "twh": "33",
+  "roofs": "2.0",
+  "gwp": "22",
+  "agree": "82–83",
+  "r_min": "0.81",
+  "r_max": "0.95",
+  "became": "+1.0",
+  "formalchg": "+0.4",
+  "vh_km2": "47",
+  "cool10": "0.39",
+  "vh_people": "319",
+  "yield_": "1,516"
+ },
+ "ramps": {
+  "diverging": "linear-gradient(90deg,#0d366b,#184f95,#256abf,#3987e5,#6da7ec,#9ec5f4,#f0efec,#f4a3a2,#ec7372,#e34948,#c23434,#9a2626,#701b1b)",
+  "sequential": "linear-gradient(90deg,#fde0d2,#f8b89c,#f29068,#eb6834,#c95222,#a1401a,#7a3013)"
+ },
+ "base": "base.jpg",
+ "layers": [
+  {
+   "id": "thermal-2025",
+   "group": "Heat",
+   "label": "Thermal classes 2025",
+   "kind": "classes",
+   "legend": [
+    [
+     "#184f95",
+     "very cool"
+    ],
+    [
+     "#6da7ec",
+     "cool"
+    ],
+    [
+     "#f0efec",
+     "moderate"
+    ],
+    [
+     "#ec7372",
+     "warm"
+    ],
+    [
+     "#9a2626",
+     "hot"
+    ]
+   ],
+   "caption": "Landsat 8/9 land surface temperature, dry-season median over three years, classed by distance from the city land mean (±0.5 and ±1.5 standard deviations).",
+   "src": "layers/thermal-2025.png"
+  },
+  {
+   "id": "thermal-2021",
+   "group": "Heat",
+   "label": "Thermal classes 2021",
+   "kind": "classes",
+   "legend": [
+    [
+     "#184f95",
+     "very cool"
+    ],
+    [
+     "#6da7ec",
+     "cool"
+    ],
+    [
+     "#f0efec",
+     "moderate"
+    ],
+    [
+     "#ec7372",
+     "warm"
+    ],
+    [
+     "#9a2626",
+     "hot"
+    ]
+   ],
+   "caption": "Same method, 2021 window.",
+   "src": "layers/thermal-2021.png"
+  },
+  {
+   "id": "thermal-2017",
+   "group": "Heat",
+   "label": "Thermal classes 2017",
+   "kind": "classes",
+   "legend": [
+    [
+     "#184f95",
+     "very cool"
+    ],
+    [
+     "#6da7ec",
+     "cool"
+    ],
+    [
+     "#f0efec",
+     "moderate"
+    ],
+    [
+     "#ec7372",
+     "warm"
+    ],
+    [
+     "#9a2626",
+     "hot"
+    ]
+   ],
+   "caption": "Same method, 2017 window.",
+   "src": "layers/thermal-2017.png"
+  },
+  {
+   "id": "lst-2025",
+   "group": "Heat",
+   "label": "Surface heat 2025 (°C)",
+   "kind": "ramp",
+   "legend": [
+    "-8 °C",
+    "city mean",
+    "+8 °C",
+    "diverging"
+   ],
+   "caption": "Land surface temperature minus the city land mean. Gap-free: computed from the thermal band with NDVI-based emissivity and calibrated to the Collection 2 product.",
+   "src": "layers/lst-2025.png"
+  },
+  {
+   "id": "lst-change",
+   "group": "Heat",
+   "label": "Heat change 2017–2025",
+   "kind": "ramp",
+   "legend": [
+    "cooled 4 °C",
+    "no change",
+    "warmed 4 °C",
+    "diverging"
+   ],
+   "caption": "Difference of the two relative-heat maps. Read local contrasts; broad regional bands in the west may include compositing differences.",
+   "src": "layers/lst-change.png"
+  },
+  {
+   "id": "landcover-2025",
+   "group": "Growth",
+   "label": "Land cover 2025",
+   "kind": "classes",
+   "legend": [
+    [
+     "#c23434",
+     "built dense"
+    ],
+    [
+     "#f29068",
+     "built sparse"
+    ],
+    [
+     "#2f8f3a",
+     "tree cover"
+    ],
+    [
+     "#d6e8a0",
+     "grass / cropland"
+    ],
+    [
+     "#c9b38b",
+     "bare soil"
+    ],
+    [
+     "#5fb7c4",
+     "wetland"
+    ],
+    [
+     "#256abf",
+     "water"
+    ]
+   ],
+   "caption": "Sentinel-2 random forest, 10 m, trained on Dynamic World labels; built-up requires building evidence within about 30 m.",
+   "src": "layers/landcover-2025.png"
+  },
+  {
+   "id": "landcover-2017",
+   "group": "Growth",
+   "label": "Land cover 2017",
+   "kind": "classes",
+   "legend": [
+    [
+     "#c23434",
+     "built dense"
+    ],
+    [
+     "#f29068",
+     "built sparse"
+    ],
+    [
+     "#2f8f3a",
+     "tree cover"
+    ],
+    [
+     "#d6e8a0",
+     "grass / cropland"
+    ],
+    [
+     "#c9b38b",
+     "bare soil"
+    ],
+    [
+     "#5fb7c4",
+     "wetland"
+    ],
+    [
+     "#256abf",
+     "water"
+    ]
+   ],
+   "caption": "Same method, 2017 (Sentinel-2 L1C).",
+   "src": "layers/landcover-2017.png"
+  },
+  {
+   "id": "growth",
+   "group": "Growth",
+   "label": "Where the city grew",
+   "kind": "classes",
+   "legend": [
+    [
+     "#a9a8a0",
+     "built by 2017"
+    ],
+    [
+     "#eb6834",
+     "new 2017–2021"
+    ],
+    [
+     "#9a2626",
+     "new 2021–2025"
+    ]
+   ],
+   "caption": "First epoch in which each 10 m pixel is mapped as built-up.",
+   "src": "layers/growth.png"
+  },
+  {
+   "id": "informal-2025",
+   "group": "People",
+   "label": "Informal-type settlement",
+   "kind": "classes",
+   "legend": [
+    [
+     "#1b1b1f",
+     "informal-type morphology"
+    ]
+   ],
+   "caption": "90 m cells with ≥35 % roof cover, mean footprint ≤80 m², ≥30 buildings/ha, low roofs, in clusters ≥2.4 ha. A morphology proxy that misses mixed-use areas such as Kisenyi.",
+   "src": "layers/informal-2025.png"
+  },
+  {
+   "id": "trees",
+   "group": "Response",
+   "label": "Tree-planting priority",
+   "kind": "classes",
+   "legend": [
+    [
+     "#a8dca8",
+     "low"
+    ],
+    [
+     "#74c474",
+     "medium"
+    ],
+    [
+     "#008300",
+     "high"
+    ],
+    [
+     "#004700",
+     "very high"
+    ]
+   ],
+   "caption": "Heat rank × population rank (×1.5 in informal-type areas) × canopy deficit, only where open grass, cropland or bare land exists on slopes under 30°. Wetlands are never plantable.",
+   "src": "layers/trees.png"
+  },
+  {
+   "id": "solar",
+   "group": "Response",
+   "label": "Rooftop solar potential",
+   "kind": "ramp",
+   "legend": [
+    "0",
+    "GWh/km²/yr",
+    "78",
+    "sequential"
+   ],
+   "caption": "2.0 million Overture roofs, ERA5-Land irradiance 2015–2024, 21 % modules, 0.80 performance ratio, shading from neighbouring building heights.",
+   "src": "layers/solar.png"
+  }
+ ],
+ "charts": {
+  "lcz": "charts/lcz.png",
+  "traj": "charts/traj.png",
+  "class": "charts/class.png",
+  "solar": "charts/solar.png",
+  "trees": "charts/trees.png",
+  "cube": "charts/cube.png"
+ },
+ "anims": {
+  "wind": "anims/wind.gif",
+  "cube": "anims/cube.gif"
+ }
+}

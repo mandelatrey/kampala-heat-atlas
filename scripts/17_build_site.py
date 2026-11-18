@@ -1,6 +1,7 @@
 """Build the public GitHub Pages site in docs/.
 
-    docs/index.html     2D atlas (scripts/14_atlas.py)
+    docs/atlas/         data for the 2D atlas (scripts/14_atlas.py); the page is the React app in web/,
+                        built into docs/app/, and docs/index.html forwards to it
     docs/3d.html        deck.gl 3D viewer of the three model districts (sun shadows, breeze)
     docs/gallery.html   all figures and animations
     docs/data/*.json    district buildings, flow arrows and shade images for the 3D viewer
@@ -52,9 +53,8 @@ input[type=range]{{max-width:900px;width:100%;accent-color:var(--blue)}}
 <nav><a href="index.html">Atlas</a><a href="3d.html">3D model</a><a href="stories.html">Stories</a><a href="daynight.html">Day vs night</a><a href="meteogram.html">Meteogram</a><a href="site-weather/">Site weather</a><a href="gallery.html">Figures</a><a href="https://github.com/gavacharles/kampala-heat-atlas">Code</a></nav>
 """
 
-# ---------------------------------------------------------------- 2D atlas
+# ---------------------------------------------------------------- 2D atlas (data only; writes docs/atlas/)
 subprocess.run([sys.executable, str(ROOT / "scripts" / "14_atlas.py"), str(DOCS)], check=True)
-(DOCS / "kampala_heat_atlas.html").replace(DOCS / "index.html")
 
 # ---------------------------------------------------------------- 3D viewer data
 summary = pd.read_csv(TAB / "m6_district_summary.csv").set_index("district")
