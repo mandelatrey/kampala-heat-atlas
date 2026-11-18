@@ -8,7 +8,7 @@ import react from "@vitejs/plugin-react";
 // served from /, so those URLs become /atlas/..., /site-weather/...; this serves them from docs/.
 // Any file under docs/ is served, so a newly moved page needs no change here, except docs/index.html
 // (it forwards to the built app) and docs/app/ (the built copy of this app).
-const DOCS = resolve(__dirname, "../docs");
+const DOCS = resolve(import.meta.dirname, "../docs");
 const TYPES: Record<string, string> = {
   ".json": "application/json", ".csv": "text/csv; charset=utf-8", ".md": "text/markdown; charset=utf-8",
   ".png": "image/png", ".jpg": "image/jpeg", ".gif": "image/gif", ".mp4": "video/mp4", ".pdf": "application/pdf",

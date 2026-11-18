@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { Atlas, NumberKey } from "./types";
 
 // Contract test: the committed docs/atlas/ (written by scripts/14_atlas.py) has what the page reads.
-const DIR = resolve(__dirname, "../../../docs/atlas");
+const DIR = resolve(import.meta.dirname, "../../../docs/atlas");
 const atlas = JSON.parse(readFileSync(resolve(DIR, "atlas.json"), "utf-8")) as Atlas;
 
 const NUMBERS: NumberKey[] = [

@@ -1,0 +1,192 @@
+/* Site weather: the site page and the list of sites. */
+
+.site-top { display: flex; align-items: end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.back { text-decoration: none; }
+.back:hover { color: var(--ink); }
+
+.site-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, 1fr); gap: 20px; align-items: start; }
+.side { display: grid; gap: 20px; }
+@media (max-width: 1100px) { .site-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- hero: a light "sky" card in both themes, its mood set by the day */
+.hero {
+  --ink: #15171b; --ink-2: #3c4048; --muted: #5c616b;
+  position: relative; isolation: isolate; overflow: hidden; border-radius: 26px; padding: 22px 24px 18px;
+  color: var(--ink); display: grid; gap: 14px; box-shadow: var(--shadow);
+  background: linear-gradient(180deg, var(--sky1) 0%, var(--sky2) 48%, var(--sky3) 100%);
+}
+.hero::after { /* film grain */
+  content: ""; position: absolute; inset: 0; z-index: -1; opacity: .22; mix-blend-mode: soft-light; pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+.sky-clear { --sky1: #9fb2e4; --sky2: #d8cfe0; --sky3: #f6bf8e; }
+.sky-wet   { --sky1: #a9b8d2; --sky2: #cdd6e2; --sky3: #e9e4e4; }
+.sky-storm { --sky1: #a3a6d6; --sky2: #c4b9d6; --sky3: #e7c3c0; }
+.sky-heat  { --sky1: #f5c9a0; --sky2: #f3a46f; --sky3: #f9dcc0; }
+.hero-top { display: flex; justify-content: space-between; gap: 8px; }
+.hero .eyebrow { color: var(--ink-2); }
+.hero-head { font-size: clamp(26px, 3.3vw, 40px); font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; max-width: 22ch; text-wrap: balance; }
+.hero mark { background: rgb(255 255 255 / .62); color: inherit; padding: 0 .16em; border-radius: 8px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.hero-sub { color: var(--ink-2); font-size: 14px; max-width: 60ch; }
+
+/* workday arc */
+.arc { position: relative; }
+.arc > svg { display: block; width: 100%; height: auto; overflow: visible; }
+.arc-ground { stroke: rgb(21 23 27 / .35); stroke-width: 1; }
+.arc-path { fill: none; stroke: rgb(21 23 27 / .75); stroke-width: 2; }
+.arc-storm line { stroke: #9a2222; stroke-width: 1.5; stroke-dasharray: 4 4; }
+.arc-break { font: 500 11px var(--f-mono); fill: rgb(21 23 27 / .55); text-anchor: middle; }
+.arc-dot { stroke: rgb(255 255 255 / .95); stroke-width: 2.5; cursor: pointer; transition: r .12s; }
+.arc-dot:focus-visible { outline: none; stroke: #15171b; }
+.dot-good { fill: var(--good); } .dot-warning { fill: var(--warning); } .dot-critical { fill: var(--critical); }
+.arc-tip {
+  position: absolute; transform: translate(-50%, calc(-100% - 14px)); background: #15171b; color: #fff; font-size: 12px;
+  padding: 6px 10px; border-radius: 8px; white-space: nowrap; pointer-events: none;
+}
+.arc-foot { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 8px; margin-top: 2px; }
+.arc-foot > span:not(.arc-mid) { display: grid; line-height: 1.15; }
+.arc-foot b { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.arc-foot small { color: var(--muted); font-size: 12px; }
+.arc-foot .r { text-align: right; }
+.arc-mid { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 500; }
+
+/* ---------- week strip */
+.week { display: grid; gap: 14px; }
+.week-sum { font-size: 13px; }
+.week-bars { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.wk {
+  display: grid; justify-items: center; gap: 6px; padding: 8px 2px; border: 0; border-radius: 12px; background: none;
+  color: var(--ink-2); font: inherit; cursor: pointer;
+}
+.wk:hover { background: var(--surface-2); }
+.wk-val { font-size: 12.5px; color: var(--ink-2); }
+.wk-track { display: flex; align-items: end; height: 64px; }
+.wk-bar { display: block; width: 10px; border-radius: 4px; background: var(--line-strong); }
+.wk-storm { height: 15px; display: grid; place-items: center; }
+.storm-likely { color: var(--critical); } .storm-possible { color: var(--warning-ink); }
+.wk-day { font-size: 12.5px; }
+.wk[aria-pressed="true"] { background: var(--surface-2); }
+.wk[aria-pressed="true"] .wk-bar { background: var(--ink); }
+.wk[aria-pressed="true"] .wk-day, .wk[aria-pressed="true"] .wk-val { color: var(--ink); font-weight: 650; }
+
+/* ---------- storm alert */
+.alert {
+  display: grid; gap: 10px; padding: 18px 20px; border-radius: var(--radius);
+  background: var(--critical-bg); border: 1px solid color-mix(in srgb, var(--critical) 35%, transparent); color: var(--ink);
+}
+.alert-when { display: inline-flex; align-items: center; gap: 8px; color: var(--critical-ink); font-weight: 600; font-size: 13px; }
+.alert-when i { width: 8px; height: 8px; border-radius: 50%; background: var(--critical); }
+.alert-body { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+.alert-body p { color: var(--ink-2); font-size: 14px; }
+.alert-body svg { color: var(--critical-ink); flex: none; }
+.alert .btn { justify-self: start; }
+
+.notes { display: grid; gap: 10px; }
+.notes ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 13.5px; color: var(--ink-2); }
+.notes li { display: grid; grid-template-columns: 16px 1fr; gap: 8px; }
+.notes li svg { margin-top: 3px; color: var(--muted); }
+
+/* ---------- gauges (label, value, a slim meter with the site's limits) */
+.gauges { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.gauge { display: flex; justify-content: space-between; gap: 12px; padding: 18px 20px; border-left: 1px solid var(--line); }
+.gauge:first-child { border-left: 0; }
+.gauge-text { display: grid; gap: 4px; align-content: start; min-width: 0; }
+.gauge .eyebrow { display: inline-flex; align-items: center; gap: 6px; }
+.gauge-val { font-size: 30px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
+.gauge-val small { font-size: 14px; font-weight: 500; color: var(--muted); margin-left: 2px; }
+.gauge-state { font-size: 13px; font-weight: 600; }
+.t-good { color: var(--good-ink); } .t-warning { color: var(--warning-ink); } .t-critical { color: var(--critical-ink); }
+.gauge-lim { font-size: 12px; color: var(--muted); }
+.meter { position: relative; flex: none; width: 8px; height: 74px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--line); overflow: visible; }
+.meter-fill { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 3px; background: var(--muted); }
+.m-good { background: var(--good-bg); } .m-good .meter-fill { background: var(--good); }
+.m-warning { background: var(--warning-bg); } .m-warning .meter-fill { background: var(--warning); }
+.m-critical { background: var(--critical-bg); } .m-critical .meter-fill { background: var(--critical); }
+.meter-tick { position: absolute; left: -4px; right: -4px; height: 2px; background: var(--ink); opacity: .55; transform: translateY(1px); }
+.meter-tick.stop { opacity: .9; }
+@media (max-width: 860px) {
+  .gauges { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gauge:nth-child(3) { border-left: 0; }
+  .gauge:nth-child(n+3) { border-top: 1px solid var(--line); }
+}
+@media (max-width: 420px) { .gauge { padding: 14px; } .gauge-val { font-size: 24px; } }
+
+/* ---------- trade table */
+.trades { display: grid; gap: 14px; }
+.legend-row { display: flex; gap: 14px; font-size: 12.5px; color: var(--ink-2); }
+.legend-row > span { display: inline-flex; align-items: center; gap: 6px; }
+.legend-row .cell { width: 14px; height: 14px; flex: none; }
+.trade-grid { display: grid; }
+.trade, .trade-hours {
+  display: grid; grid-template-columns: minmax(180px, 250px) minmax(0, 1fr) 46px; column-gap: 16px; align-items: center;
+}
+.trade { padding: 10px 0; border-top: 1px solid var(--line); row-gap: 6px; }
+.trade-name { display: grid; gap: 4px; justify-items: start; }
+.trade-name b { font-weight: 600; font-size: 14.5px; }
+.trade-go { text-align: right; font-size: 13px; color: var(--ink-2); }
+.trade-act { grid-column: 2 / 4; font-size: 13.5px; color: var(--ink-2); }
+.cells { display: flex; gap: 3px; min-width: 0; }
+.cell { flex: 1 1 0; min-width: 0; height: 18px; border-radius: 5px; display: block; }
+.cell.gap { margin-left: 10px; }
+.cells.head .cell { height: auto; text-align: center; font: 500 11px var(--f-mono); color: var(--muted); }
+.trade-hours { padding-bottom: 6px; }
+.c-good { background: color-mix(in srgb, var(--good) 78%, var(--surface)); }
+.c-warning { background-color: color-mix(in srgb, var(--warning) 85%, var(--surface)); background-image: radial-gradient(circle, rgb(0 0 0 / .32) 1.6px, transparent 1.8px); background-size: 8px 8px; }
+.c-critical { background-color: color-mix(in srgb, var(--critical) 85%, var(--surface)); background-image: repeating-linear-gradient(135deg, rgb(255 255 255 / .38) 0 2px, transparent 2px 6px); }
+@media (max-width: 720px) {
+  .trade, .trade-hours { grid-template-columns: minmax(0, 1fr) 40px; }
+  .trade-name { grid-column: 1 / 3; grid-template-columns: auto auto; justify-content: space-between; align-items: center; width: 100%; }
+  .trade .cells { grid-column: 1; }
+  .trade-act { grid-column: 1 / 3; }
+  .trade-hours > span:first-child { display: none; }
+  .trade-hours { grid-template-columns: minmax(0, 1fr) 40px; }
+}
+
+/* ---------- figures, record */
+.figure { margin: 0; }
+.figure img { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
+.share-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; }
+.share-row .figure { flex: none; width: 240px; }
+.ofnorm { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.ofnorm-bar { position: relative; width: 72px; height: 6px; border-radius: 3px; background: var(--surface-2); border: 1px solid var(--line); }
+.ofnorm-bar span { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--focus); opacity: .75; }
+.ofnorm-bar i { position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1.5px; background: var(--ink); opacity: .6; }
+.record a { color: var(--focus); }
+
+/* ---------- site list */
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.kpi { padding: 16px 20px; border-left: 1px solid var(--line); display: grid; gap: 4px; }
+.kpi:first-child { border-left: 0; }
+.kpi b { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; }
+.kpi span:last-child { font-size: 13px; color: var(--ink-2); }
+@media (max-width: 760px) {
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpi:nth-child(3) { border-left: 0; }
+  .kpi:nth-child(n+3) { border-top: 1px solid var(--line); }
+}
+.filters { display: grid; gap: 12px; padding: 14px 16px; }
+.filter-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.search {
+  display: flex; align-items: center; gap: 8px; flex: 1 1 240px; padding: 8px 12px; border-radius: 12px;
+  background: var(--surface-2); border: 1px solid var(--line); color: var(--muted);
+}
+@media (max-width: 560px) { .filter-row .select { flex: 1 1 0; min-width: 0; } }
+.search input { flex: 1; border: 0; background: none; color: var(--ink); font: 14px var(--f-sans); outline: none; min-width: 0; }
+.select {
+  padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  font: 500 13.5px var(--f-sans);
+}
+.towns td { cursor: pointer; }
+.towns tbody tr:hover td { background: var(--surface-2); }
+.towns .town a { text-decoration: none; font-weight: 600; }
+.towns .town small { display: block; color: var(--muted); font-size: 12px; }
+.towns .headline { color: var(--ink-2); max-width: 46ch; }
+.storm-cell { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); white-space: nowrap; }
+@media (max-width: 760px) {
+  .towns thead { display: none; }
+  .towns, .towns tbody, .towns tr, .towns td { display: block; }
+  .towns tr { padding: 12px 4px; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; }
+  .towns td { padding: 0; border: 0; }
+  .towns td.headline { grid-column: 1 / -1; order: 3; }
+  .towns td.wbgt, .towns td.storm { display: none; }
+}

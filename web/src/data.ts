@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { dataUrl, parseCsv, toMonthRows } from "./lib";
-import type { Briefing, MonthRow, Site } from "./types";
+import type { Briefing, MonthRow, Site, SiteThresholds, TownsToday } from "./types";
 
 export type Load<T> = { state: "loading" } | { state: "error"; message: string } | { state: "ready"; data: T };
 
@@ -47,22 +47,28 @@ export interface SiteList {
   groups: Record<string, string>;
 }
 
-export function useSites(): Load<SiteList> {
-  return useLoad("sites", () => getJson<SiteList>("site-weather/sites.json"));
-}
-
 export interface SiteData {
   briefing: Briefing;
   /** Empty when the site has no record yet. */
   months: MonthRow[];
+  /** Null if the site has no thresholds file; the gauges then show values without limits. */
+  thresholds: SiteThresholds | null;
 }
 
 export function useSite(slug: string): Load<SiteData> {
   return useLoad(slug, async () => {
-    const [briefing, months] = await Promise.all([
+    const [briefing, months, thresholds] = await Promise.all([
       getJson<Briefing>(`site-weather/${slug}/site_briefing_latest.json`),
       getText(`site-weather/${slug}/archive/monthly_index.csv`).then((t) => toMonthRows(parseCsv(t)), () => []),
+      getJson<SiteThresholds>(`site-weather/${slug}/thresholds_site.json`).catch(() => null),
     ]);
-    return { briefing, months };
+    return { briefing, months, thresholds };
+  });
+}
+
+export function useTowns(): Load<TownsToday & { groups: Record<string, string> }> {
+  return useLoad("towns", async () => {
+    const [towns, sites] = await Promise.all([getJson<TownsToday>("site-weather/towns_today.json"), getJson<SiteList>("site-weather/sites.json")]);
+    return { ...towns, groups: sites.groups };
   });
 }

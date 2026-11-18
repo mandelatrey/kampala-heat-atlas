@@ -75,3 +75,33 @@ export interface Site {
   lat: number;
   lon: number;
 }
+
+/** The limits the gauges mark, from <site>/thresholds_site.json (only the fields the page reads). */
+export interface SiteThresholds {
+  heat_wbgt_moderate_work_acclimatised_C: { continuous: number; work25_rest75: number };
+  crane: { gust_caution_ms: number; gust_stop_ms: number; hook_height_m: number };
+  concrete: { rain_prob_caution_pct: number; rain_prob_stop_pct: number };
+  earthworks: { rain_prev24h_caution_mm: number; rain_prev24h_stop_mm: number };
+}
+
+/** One town in site-weather/towns_today.json (written by scripts/31_site_weather_all.py). */
+export interface TownToday {
+  name: string;
+  region: string;
+  country: string;
+  group: string;
+  slug: string;
+  issued: string;
+  day: string;
+  headline: string;
+  /** Worst status across the trades today. */
+  worst: Status;
+  facts: DayFacts;
+  rows: { trade: string; status: Status; label: string }[];
+}
+
+export interface TownsToday {
+  issued: string;
+  towns: TownToday[];
+  activities: { key: TradeKey; name: string }[];
+}
