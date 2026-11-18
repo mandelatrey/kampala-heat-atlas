@@ -11,6 +11,13 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@deck.gl/core": "~9.4.1",
+    "@deck.gl/layers": "~9.4.1",
+    "@deck.gl/react": "~9.4.1",
+    "@deck.gl/widgets": "~9.4.1",
+    "@loaders.gl/core": "^4.5.5",
+    "@luma.gl/core": "~9.4.0",
+    "@luma.gl/engine": "~9.4.0",
     "leaflet": "^1.9.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"

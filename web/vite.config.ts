@@ -50,5 +50,6 @@ function serveDocs(): Plugin {
 export default defineConfig({
   base: "./",
   plugins: [react(), serveDocs()],
-  build: { outDir: "../docs/app", emptyOutDir: true },
+  // the 3D viewer chunk (deck.gl, ~200 kB gzipped) is loaded only on its own page
+  build: { outDir: "../docs/app", emptyOutDir: true, chunkSizeWarningLimit: 800 },
 });

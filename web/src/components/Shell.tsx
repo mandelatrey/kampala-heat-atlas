@@ -24,6 +24,8 @@ const GROUPS: { title: string; links: Link[] }[] = [
     links: [
       { label: "Overview", href: "#/atlas", active: isAtlas(undefined) },
       ...MODULES.map((m) => ({ label: m.label, href: `#/atlas/${m.id}`, active: isAtlas(m.id), sub: true })),
+
+      { label: "3D model", href: "#/3d", active: (r) => r.page === "3d" },
     ],
   },
   {
@@ -37,7 +39,6 @@ const GROUPS: { title: string; links: Link[] }[] = [
   {
     title: "More",
     links: [
-      { label: "3D model", href: dataUrl("3d.html"), external: true },
       { label: "Stories", href: dataUrl("stories.html"), external: true },
       { label: "Day vs night", href: dataUrl("daynight.html"), external: true },
       { label: "Meteogram", href: dataUrl("meteogram.html"), external: true },

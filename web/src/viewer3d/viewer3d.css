@@ -1,0 +1,61 @@
+/* The 3D viewer: the scene fills a card; the controls float over it on wide screens and sit below it on phones. */
+
+.scene-card { position: relative; overflow: hidden; display: grid; }
+.scene { position: relative; height: clamp(520px, 74vh, 860px); background: radial-gradient(120% 90% at 50% 20%, var(--surface) 0%, var(--surface-2) 70%); }
+.scene-msg { position: absolute; inset: 0; display: grid; place-items: center; }
+.panel3d {
+  position: absolute; top: 14px; left: 14px; width: 330px; max-height: calc(100% - 28px); overflow-y: auto; z-index: 2;
+  display: grid; gap: 16px; padding: 16px; border-radius: 16px; border: 1px solid var(--line); box-shadow: var(--shadow);
+  background: color-mix(in srgb, var(--surface) 90%, transparent); backdrop-filter: blur(12px);
+}
+.ctl { display: grid; gap: 8px; }
+.hide-panel { position: absolute; top: 10px; right: 10px; padding: 4px 10px; font-size: 12px; }
+.show-panel { position: absolute; top: 14px; left: 14px; z-index: 2; box-shadow: var(--shadow); }
+.ctl .chip { padding: 5px 11px; font-size: 12.5px; }
+.ramp3d { display: grid; gap: 4px; }
+.ramp3d .bar { height: 10px; border-radius: 4px; }
+.ramp3d .ends { display: flex; justify-content: space-between; gap: 8px; font: 11px var(--f-mono); color: var(--muted); }
+.ramp3d .mid { text-align: center; color: var(--ink-2); }
+.sunrow { display: flex; align-items: center; gap: 10px; }
+.sunrow .iconbtn { width: 34px; height: 34px; flex: none; }
+.sunrow input { flex: 1; accent-color: var(--accent); }
+.sunread { display: flex; align-items: baseline; gap: 10px; font-size: 13px; color: var(--ink-2); }
+.sunread b { font-size: 20px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
+.toggles { gap: 6px; font-size: 13px; }
+.toggles label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+.toggles input { accent-color: var(--ink); }
+.reset { position: absolute; right: 14px; top: 14px; z-index: 2; box-shadow: var(--shadow); }
+.scene-tip {
+  position: absolute; z-index: 3; transform: translate(14px, 14px); pointer-events: none; display: grid; gap: 1px;
+  background: var(--surface); color: var(--ink-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px;
+  font-size: 12px; box-shadow: var(--shadow); white-space: nowrap;
+}
+.scene-tip b { color: var(--ink); font-size: 13px; }
+
+.no3d { position: absolute; inset: 0; display: grid; align-content: center; gap: 12px; padding: 32px; max-width: 760px; margin: 0 auto; }
+.no3d ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--ink-2); }
+.no3d code { font: 12.5px var(--f-mono); background: var(--surface-2); padding: 1px 5px; border-radius: 5px; }
+.no3d a { color: var(--focus); }
+
+.stats3d { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.stat3d { display: grid; gap: 4px; align-content: start; padding: 16px 18px; border-left: 1px solid var(--line); }
+.stat3d:first-child { border-left: 0; }
+.stat3d b { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }
+.stat3d > span:last-child { font-size: 12.5px; color: var(--ink-2); }
+@media (max-width: 1100px) {
+  .stats3d { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .stat3d:nth-child(4) { border-left: 0; }
+  .stat3d:nth-child(n+4) { border-top: 1px solid var(--line); }
+}
+
+@media (max-width: 860px) {
+  .scene { height: 62vh; min-height: 380px; }
+  .hide-panel, .show-panel { display: none; }
+  .panel3d { position: static; width: auto; max-height: none; border: 0; border-top: 1px solid var(--line); border-radius: 0; box-shadow: none; backdrop-filter: none; background: var(--surface); }
+  .no3d { padding: 20px; position: static; }
+  .scene:has(.no3d) { height: auto; }
+  .stats3d { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat3d:nth-child(n) { border-left: 1px solid var(--line); border-top: 1px solid var(--line); }
+  .stat3d:nth-child(odd) { border-left: 0; }
+  .stat3d:nth-child(-n+2) { border-top: 0; }
+}

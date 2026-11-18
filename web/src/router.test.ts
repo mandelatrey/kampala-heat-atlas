@@ -10,6 +10,10 @@ describe("parseRoute", () => {
   it("keeps an atlas section, for links to the old page's #heat etc.", () => {
     expect(parseRoute("#/atlas/heat")).toEqual({ page: "atlas", section: "heat" });
   });
+  it("routes the 3D viewer", () => {
+    expect(parseRoute("#/3d")).toEqual({ page: "3d" });
+    expect(parseRoute("#/3d/x").page).toBe("missing");
+  });
   it("routes site weather", () => {
     expect(parseRoute("#/site-weather")).toEqual({ page: "sites" });
     expect(parseRoute("#/site-weather/central-kampala")).toEqual({ page: "site", slug: "central-kampala" });

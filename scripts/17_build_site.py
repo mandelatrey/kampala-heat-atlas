@@ -2,7 +2,8 @@
 
     docs/atlas/         data for the 2D atlas (scripts/14_atlas.py); the page is the React app in web/,
                         built into docs/app/, and docs/index.html forwards to it
-    docs/3d.html        deck.gl 3D viewer of the three model districts (sun shadows, breeze)
+    docs/data/districts.json   the three model districts (label, data file, centre, bounds, stats) for
+                        the 3D viewer, which is the React app's #/3d route; docs/3d.html forwards to it
     docs/gallery.html   all figures and animations
     docs/data/*.json    district buildings, flow arrows and shade images for the 3D viewer
     docs/figures/*      copied from outputs/figures
@@ -102,8 +103,7 @@ for name in ("cbd", "informal", "frontier"):
                        "stats": {k: float(v) for k, v in summary.loc[name].items()}}
     print(name, len(blds), "buildings,", len(arrows), "arrows,",
           f"{(DOCS / 'data' / f'district_{name}.json').stat().st_size / 1e6:.1f} MB")
-html = (ROOT / "scripts" / "site_3d_template.html").read_text().replace("__DISTRICTS__", json.dumps(districts))
-(DOCS / "3d.html").write_text(html)
+(DOCS / "data" / "districts.json").write_text(json.dumps(districts, indent=1) + "\n")   # contract: web/src/viewer3d/types.ts
 
 # ---------------------------------------------------------------- gallery
 items = [
