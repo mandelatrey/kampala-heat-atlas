@@ -39,8 +39,29 @@ describe("docs/atlas/atlas.json", () => {
     }
   });
 
+  it("says where its grid sits, matching the layer size", () => {
+    expect(atlas.grid?.crs).toMatch(/^EPSG:32[67]\d{2}$/);
+    expect(atlas.grid?.origin).toHaveLength(2);
+    expect(atlas.grid?.pixel).toBeGreaterThan(0);
+  });
+
   it("has unique layer ids", () => {
     const ids = atlas.layers.map((l) => l.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+});
+
+// places.json is optional (scripts/14b_places.py needs internet access); when present it must be well formed
+describe("docs/atlas/places.json", () => {
+  const file = resolve(DIR, "places.json");
+  it.skipIf(!existsSync(file))("lists named places inside the study area", () => {
+    const p = JSON.parse(readFileSync(file, "utf-8")) as { source: string; places: { name: string; rank: number; lat: number; lon: number }[] };
+    expect(p.source).toMatch(/OpenStreetMap/);
+    for (const x of p.places) {
+      expect(x.name.length, JSON.stringify(x)).toBeGreaterThan(0);
+      expect(x.rank).toBeGreaterThanOrEqual(1);
+      expect(x.lat).toBeGreaterThan(-90);
+      expect(x.lon).toBeGreaterThan(-180);
+    }
   });
 });

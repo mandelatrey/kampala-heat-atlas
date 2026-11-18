@@ -1,7 +1,8 @@
 import { AmbientLight, FlyToInterpolator, LightingEffect, _SunLight as SunLight, type MapViewState, type PickingInfo } from "@deck.gl/core";
-import { BitmapLayer, LineLayer, PolygonLayer, ScatterplotLayer, SolidPolygonLayer } from "@deck.gl/layers";
+import { BitmapLayer, LineLayer, PolygonLayer, ScatterplotLayer, SolidPolygonLayer, TextLayer } from "@deck.gl/layers";
 import DeckGL from "@deck.gl/react";
 import { useMemo, useState } from "react";
+import type { Place } from "../atlas/places";
 import { rampColour, type ColourKey } from "./colours";
 import { indexBuildings, pickBuilding } from "./pick";
 import type { Arrow, Building, DistrictData, DistrictMeta } from "./types";
@@ -16,6 +17,8 @@ export interface SceneProps {
   shade: boolean;
   /** Changes when the camera should fly back to the district's starting view. */
   viewKey: number;
+  /** Named places inside the district, drawn above the roofs. */
+  places: Place[];
   onError: (message: string) => void;
 }
 
@@ -43,7 +46,7 @@ function Tooltip({ b, x, y }: { b: Building; x: number; y: number }) {
 }
 
 /** The deck.gl scene: ground, optional shade-hours image, extruded buildings, breeze arrows, sun and shadows. */
-export function Scene({ meta, data, colour, time, wind, shade, viewKey, onError }: SceneProps) {
+export function Scene({ meta, data, colour, time, wind, shade, viewKey, places, onError }: SceneProps) {
   const [hover, setHover] = useState<Hover | null>(null);
   const index = useMemo(() => indexBuildings(data.buildings), [data]);
   const onHover = (info: PickingInfo) => {
@@ -75,6 +78,16 @@ export function Scene({ meta, data, colour, time, wind, shade, viewKey, onError 
     }),
     wind && new ScatterplotLayer<Arrow>({
       id: "heads", data: data.arrows, getPosition: (a) => [a[2], a[3], 4], getRadius: 2.2, getFillColor: [20, 20, 25, 200],
+    }),
+    places.length > 0 && new TextLayer<Place>({
+      id: "places", data: places, getPosition: (p) => [p.lon, p.lat, 45], getText: (p) => p.name,
+      getSize: (p) => (p.rank <= 2 ? 15 : 13), sizeUnits: "pixels", billboard: true, characterSet: "auto",
+      fontFamily: "Geist, Inter, Helvetica, Arial, sans-serif", fontWeight: 600,
+      getColor: [21, 23, 27, 255], outlineWidth: 5, outlineColor: [255, 255, 255, 230], fontSettings: { sdf: true },
+      getTextAnchor: "middle", getAlignmentBaseline: "center",
+      parameters: { depthCompare: "always" },          // names stay readable in front of tall buildings
+      // floating labels must not cast shadows on the roofs; the text is drawn by the "characters" sub-layer
+      _subLayerProps: { characters: { shadowEnabled: false }, background: { shadowEnabled: false } },
     }),
   ].filter(Boolean);
 

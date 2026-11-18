@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { RAMPS, SHADE_STOPS, type ColourKey } from "./colours";
 import { canUseWebGL2, useDistrict, useDistricts } from "./data";
+import { usePlaces } from "../atlas/places";
 import { Scene } from "./Scene";
 import { clock, compass, DAYS, sunPosition, timestamp, type DayKey } from "./sun";
 import type { DistrictMeta } from "./types";
@@ -62,6 +63,12 @@ export function Viewer3D() {
   const list = districts.state === "ready" ? districts.data : {};
   const meta = list[name] ?? Object.values(list)[0];
   const data = useDistrict(meta?.file);
+  const placesLoad = usePlaces();
+  const inDistrict = useMemo(() => {
+    if (!meta || placesLoad.state !== "ready") return [];
+    const [w, s, e, n] = meta.bounds;
+    return placesLoad.data.places.filter((p) => p.lon >= w && p.lon <= e && p.lat >= s && p.lat <= n);
+  }, [meta, placesLoad]);
 
   useEffect(() => {
     document.title = "Kampala in 3D";
@@ -113,7 +120,7 @@ export function Viewer3D() {
         <div className="scene" role="img" aria-label={meta ? `3D model of ${meta.label}, coloured by ${ramp.name.toLowerCase()}, sun at ${clock(hour)} on ${day}` : "3D model"}>
           {!webgl || glError ? <NoWebGL detail={glError ?? undefined} />
             : meta && data.state === "ready" ? (
-              <Scene meta={meta} data={data.data} colour={colour} time={time} wind={wind} shade={shade} viewKey={viewKey} onError={setGlError} />
+              <Scene meta={meta} data={data.data} colour={colour} time={time} wind={wind} shade={shade} viewKey={viewKey} places={inDistrict} onError={setGlError} />
             ) : data.state === "error" ? <p className="state scene-msg">This district could not be loaded ({data.message}).</p>
             : <p className="state scene-msg">Loading {meta?.label ?? "the model"}…</p>}
         </div>
@@ -190,6 +197,7 @@ export function Viewer3D() {
         Heights: Overture, else Open Buildings 2.5D footprint p90 (2023). Irradiance: 2 m ray-traced shadows, 12 days × daylight
         hours, ERA5-scaled. Wind: 2D potential flow (no turbulence). Terrain: FABDEM (CC BY-NC-SA). Shadows in the model are
         drawn by the graphics card for the chosen hour; the roof numbers come from the year-round ray tracing.
+        {placesLoad.state === "ready" && placesLoad.data.source && <> Place names {placesLoad.data.source}.</>}
       </p>
     </div>
   );

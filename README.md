@@ -43,6 +43,7 @@ python scripts/00_check_setup.py
 | Land cover, change, building constraint | `07`, `07b`, `07c` |
 | Thermal classes · settlements · trees · solar | `08`, `09`/`09b`, `10`, `11` |
 | Figures · animations · atlas | `12`, `13`, `14` |
+| Place names for the maps (OpenStreetMap; needs internet) | `14b` |
 | 3D model · 3D visuals · website | `15`, `16`, `17` |
 
 Large data go to `~/kampala-thesis-data` (set in `config/config.yaml`) and are not in this repository.

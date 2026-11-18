@@ -37,6 +37,14 @@
   "sequential": "linear-gradient(90deg,#fde0d2,#f8b89c,#f29068,#eb6834,#c95222,#a1401a,#7a3013)"
  },
  "base": "base.jpg",
+ "grid": {
+  "crs": "EPSG:32636",
+  "origin": [
+   427650.0,
+   60810.0
+  ],
+  "pixel": 30.0
+ },
  "layers": [
   {
    "id": "thermal-2025",

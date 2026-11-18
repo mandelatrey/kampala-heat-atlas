@@ -45,6 +45,8 @@ export interface Atlas {
   ramps: Record<RampKey, string>;
   /** Hillshade under every layer. */
   base: string;
+  /** Where the grid sits on the Earth (older atlas.json files lack it; the map then has no names or coordinates). */
+  grid?: import("./geo").Grid;
   layers: AtlasLayer[];
   charts: Record<ChartKey, string>;
   anims: Record<AnimKey, string>;

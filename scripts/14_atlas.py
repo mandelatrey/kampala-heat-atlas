@@ -3,7 +3,7 @@
     python scripts/14_atlas.py <output_dir>          # scripts/17_build_site.py passes docs/
 
 Writes <output_dir>/atlas/:
-  atlas.json        grid size, years, headline numbers, legend ramps, and the layer, chart and
+  atlas.json        grid size and georeference, years, headline numbers, legend ramps, and the layer, chart and
                     animation list with each file's path (the contract is web/src/atlas/types.ts)
   base.jpg          FABDEM hillshade
   layers/<id>.png   every raster layer as a transparent PNG on the shared 30 m grid (same bounds),
@@ -204,6 +204,9 @@ legend_ramps = {
 }
 manifest = dict(
     size=[H, W], years=Y, numbers=num, ramps=legend_ramps, base=BASE,
+    # where the grid sits: pixel (row r, col c) has its top-left corner at x = origin[0] + c * pixel,
+    # y = origin[1] - r * pixel in crs; the page uses it to place names and read coordinates
+    grid=dict(crs=config.load()["study_area"]["crs"], origin=[round(T.c, 3), round(T.f, 3)], pixel=round(T.a, 6)),
     layers=[dict(id=i, group=gp, label=lb, kind=kd, legend=lg, caption=cp, src=layers[i]) for i, gp, lb, kd, lg, cp in LAYERS],
     charts=charts, anims=anims,
 )
