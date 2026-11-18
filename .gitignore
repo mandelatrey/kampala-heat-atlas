@@ -31,3 +31,6 @@ docs/site-weather/uganda_*_x_16x9.png
 docs/site-weather/**/site_meteogram_*.png
 docs/site-weather/_built_*.txt
 docs/site-weather/market/*.png
+
+# built by web/ (npm run build); CI builds it before deploying
+docs/app/

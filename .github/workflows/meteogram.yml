@@ -7,7 +7,7 @@ on:
     - cron: "41 3 * * *"       # 06:41 in Uganda, backup
   push:
     branches: [main]
-    paths: ["scripts/**", "docs/**", ".github/workflows/**"]
+    paths: ["scripts/**", "docs/**", "web/**", ".github/workflows/**"]
   workflow_dispatch:
 permissions:
   contents: write
@@ -83,6 +83,18 @@ jobs:
             sleep $((i * 5))
           done
           echo "push failed after retries" && exit 1
+      # the React/TypeScript pages in web/ read the data above and are built into docs/app/ (not committed)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Build the web app
+        working-directory: web
+        run: |
+          npm ci
+          npm test
+          npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs

@@ -47,6 +47,24 @@ python scripts/00_check_setup.py
 
 Large data go to `~/kampala-thesis-data` (set in `config/config.yaml`) and are not in this repository.
 
+## Web app (`web/`)
+
+The pages are moving, one at a time, to a React + TypeScript app in `web/`. Python still does all the
+analysis and writes data files into `docs/`; the app only reads them. The first page moved is the
+site-weather city page, at `app/#/site-weather/<site>` (for example
+`app/#/site-weather/central-kampala`); the generated pages stay in place until the move is done.
+
+```bash
+cd web
+npm install
+npm run dev        # http://localhost:5173/#/site-weather/central-kampala, reading data from ../docs
+npm test           # unit tests
+npm run build      # type-check and build into docs/app/
+```
+
+`docs/app/` is not committed: the GitHub workflow builds it before each deploy. The data contract between
+the two halves is `web/src/types.ts`; if a script changes what it writes, update the types there.
+
 ## Licences
 
 Code: MIT (`LICENSE`). Maps and derived layers inherit their input licences, and anything using
