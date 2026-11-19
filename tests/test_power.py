@@ -1,7 +1,6 @@
-"""Power-cut log, sampling periods, rates and the estimate model (src/kampala/power.py), on made-up data only."""
+"""Power-cut log, sampling periods, rates and published figures (src/kampala/power.py), on made-up data only."""
 from datetime import date
 
-import numpy as np
 import pytest
 
 from kampala import power as P
@@ -91,52 +90,6 @@ def test_planned_cuts_and_typical_cut_length(tmp_path):
     assert P.hours_per_cut_day(rows) == 9.5
 
 
-def test_features_from_classes():
-    lc = np.array([[1, 2, 3, 7]]); growth = np.array([[1, 3, 0, 0]]); informal = np.array([[1, 0, 0, 0]])
-    assert P.shares(lc, growth, informal) == {"built": 0.5, "new_built": 0.5, "trees": 0.25, "informal": 0.25}
-
-
-def _areas(days_week, coords, feats=None, basis="sampled", days=14):
-    out = []
-    for i, (d, (lat, lon)) in enumerate(zip(days_week, coords)):
-        f = feats[i] if feats else {k: 0.0 for k in P.FEATURES}
-        out.append(P.Area(f"A{i}", lat, lon, basis, "", "", days, round(d * days / 7), d, None, {}, [], dict(f)))
-    return out
-
-
-def test_uses_nearest_areas_when_cuts_follow_geography():
-    rng = np.random.default_rng(1)
-    coords = [(0.25 + 0.03 * i, 32.50 + 0.02 * (i % 3)) for i in range(10)]
-    y = [0.3 + 5.5 * (lat - 0.25) / 0.27 + rng.normal(0, 0.15) for lat, _ in coords]   # north: cuts most days
-    m = P.choose_model(_areas(y, coords))
-    assert m.used and m.chosen == "nearest areas" and m.loo_mae["nearest areas"] < 0.9 * m.loo_mae["average"]
-    est = m.predict([(0.25, 32.5), (0.52, 32.5)], None)
-    assert est[0] < est[1]
-
-
-def test_learns_from_outlier_areas_when_cuts_follow_area_features():
-    rng = np.random.default_rng(2)
-    coords = [(0.2 + 0.4 * rng.random(), 32.4 + 0.4 * rng.random()) for _ in range(12)]
-    feats = [{"built": rng.random(), "new_built": rng.random(), "trees": rng.random(), "informal": rng.random(), "dist_cbd_km": 20 * rng.random()} for _ in range(12)]
-    y = [min(7.0, 0.5 + 5 * f["new_built"] ** 2 + rng.normal(0, 0.1)) for f in feats]   # a few areas with cuts most days
-    m = P.choose_model(_areas(y, coords, feats))
-    assert m.used and m.chosen == "area features"
-
-
-def test_declines_when_nothing_beats_the_average():
-    rng = np.random.default_rng(3)
-    coords = [(0.2 + 0.4 * rng.random(), 32.4 + 0.4 * rng.random()) for _ in range(10)]
-    m = P.choose_model(_areas(list(np.clip(2 + rng.normal(0, 1, 10), 0, 7)), coords))
-    assert not m.used and m.chosen == "average" and m.predict is None
-
-
-def test_leaves_out_unsampled_and_short_areas():
-    coords = [(0.25 + 0.03 * i, 32.5) for i in range(10)]
-    y = [0.5 * i for i in range(10)]
-    assert P.choose_model(_areas(y, coords, basis="reports only")).n == 0
-    assert P.choose_model(_areas(y, coords, days=5)).n == 0
-
-
 def test_complaint_times_and_published_figures(tmp_path):
     header = "area,lat,lon,date,hours_off,cuts,kind,start,end,reported,source,notes\n"
     rows = P.read_log(write(tmp_path, "log2.csv", header, "A,0.3,32.5,2026-11-01,,,,,,20:15,X complaint,\nA,0.3,32.5,2026-11-02,0,,,,,09:00,X complaint,power was on\nA,0.3,32.5,2026-11-03,,,,,,07:05,,\n"))
@@ -144,7 +97,14 @@ def test_complaint_times_and_published_figures(tmp_path):
     assert (h[20], h[7], h[9], sum(h)) == (1, 1, 0, 2)          # a power-on day is not a cut
     with pytest.raises(ValueError, match="HH:MM"):
         P.read_log(write(tmp_path, "log3.csv", header, "A,0.3,32.5,2026-11-01,,,,,,8pm,,\n"))
-    pub = write(tmp_path, "published.csv", "areas,lat,lon,from,to,cuts_per_month,qualifier,source,url,note\n",
-                "Nowhere;Alpha,,,2019-08-01,2019-10-31,13,up to,A newspaper,https://example.org,\n")
-    (p,) = P.read_published(pub, [{"name": "Alpha", "rank": 4, "lat": 0.38, "lon": 32.62}])
-    assert (p["areas"], p["lat"], p["cuts_per_month"], p["qualifier"]) == (["Nowhere", "Alpha"], 0.38, 13.0, "up to")
+    head = "areas,lat,lon,radius_km,from,to,cuts_per_month,hours_per_month,basis,qualifier,label,source,url,note\n"
+    pub = write(tmp_path, "published.csv", head,
+                "Nowhere;Alpha;Beta,,,,2019-08-01,2019-10-31,13,,reported,up to,A and B,A newspaper,https://example.org,\n"
+                "Alpha,0.5,32.7,6,2022-01-01,2022-12-31,5.5,6.6,measured,,Network,A study,,\n")
+    places = [{"name": "Alpha", "rank": 4, "lat": 0.38, "lon": 32.62}, {"name": "Beta", "rank": 4, "lat": 0.40, "lon": 32.64}]
+    news, study = P.read_published(pub, places)
+    assert (news["areas"], news["lat"], news["lon"], news["radius_km"]) == (["Nowhere", "Alpha", "Beta"], 0.39, 32.63, 3.0)
+    assert (news["cuts_per_month"], news["hours_per_cut"], news["basis"], news["qualifier"]) == (13.0, None, "reported", "up to")
+    assert (study["lat"], study["radius_km"], study["hours_per_cut"]) == (0.5, 6.0, 1.2)
+    with pytest.raises(ValueError, match="basis"):
+        P.read_published(write(tmp_path, "bad.csv", head, "Alpha,,,,2022-01-01,2022-12-31,5,,guess,,,A study,,\n"), places)

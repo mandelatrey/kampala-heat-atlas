@@ -1,12 +1,34 @@
-# Power-cut log
+# Power cuts
 
-Two files feed the atlas's power-cut figures (`scripts/33_power.py` → `docs/power/power.json`); re-run the script
-after editing either:
+Three files feed the atlas's power-cut information (`scripts/33_power.py` → `docs/power/power.json`); re-run the
+script after editing any of them:
 
-- `outage_log.csv`: **one row per reported cut**, for example each complaint to UEDCL on X about a cut in an area.
-  Several complaints about the same area on the same day count as one cut day.
-- `sampling.csv`: **which areas you watched, over which dates.** Inside a watched period, a day with no reported cut
-  counts as a day the power stayed on. That is what turns reports into a rate (days a week with a cut).
+- `published.csv`: **figures from studies and news**. Studies of the utility's own outage records (`basis` =
+  `measured`) are the main source: the atlas shows each one for places within its radius, and a typical Kampala range
+  (built from all of them) everywhere else. The solar calculator takes its power-cut defaults and typical cut length
+  from them too. News figures (`basis` = `reported`) are shown beside them.
+- `outage_log.csv`: **residents' complaints** (e.g. on X), one row per reported cut. Shown as complaints near the area,
+  and their times show when in the day cuts are reported. Never shown as a rate unless the area has a sampling period.
+- `sampling.csv`: optional; the dates an area was watched in full (see below).
+
+There is no estimate for areas nobody studied: how often the power goes off depends on the line a building is on
+(its length, loading and equipment; the studies below name worn jumpers, conductors and transformers, and lines up to
+40 km long loaded to 95 %), which the atlas cannot see.
+
+## published.csv
+
+| column | what to put | example |
+|---|---|---|
+| `areas` | names the figure covers, separated by `;` (its location defaults to their middle) | `Lugogo;Nakawa;Ntinda;Kireka` |
+| `lat`, `lon` | optional, instead of the names' middle | |
+| `radius_km` | how far from that point to show it (default 3) | `6` |
+| `from`, `to` | the period it covers, `YYYY-MM-DD` | `2022-01-01`, `2022-12-31` |
+| `cuts_per_month` | cuts a month for the average customer (SAIFI per month) | `5.5` |
+| `hours_per_month` | hours without power a month (SAIDI per month), if known | `6.26` |
+| `basis` | `measured` (utility outage records) or `reported` (news, residents) | `measured` |
+| `qualifier` | e.g. `up to` | |
+| `label` | how the page names it | `Kampala East network (Lugogo, Nakawa, Ntinda and Kireka substations)` |
+| `source`, `url`, `note` | short citation, link, anything else | |
 
 ## outage_log.csv
 
@@ -35,34 +57,10 @@ as an upcoming cut for that area until the day passes.
 | `from`, `to` | first and last day watched, `YYYY-MM-DD` | `2026-11-01`, `2026-11-14` |
 | `source` | how it was watched | `X complaints to UEDCL` |
 
-**List the quiet areas too.** An area you watched and found no complaints for still needs a row here: it counts as
-"no cuts", and the model needs those as much as the areas where the power goes off several times a week. If only
-the worst areas are in the sample, estimates for ordinary areas come out too high, and the held-out test cannot catch
-that.
-
-An area with reports but no sampling period is shown as "reports only" (its first to last report would overstate the
-rate) and kept out of the model.
-
-## published.csv
-
-Figures from news and reports, shown near the areas they name: `areas` (names separated by `;`), `lat`, `lon`
-(optional), `from`, `to`, `cuts_per_month`, `qualifier` (e.g. `up to`), `source`, `url`, `note`.
-
-## Complaints found by searching are reports, not a sample
-
-Ten complaints for an area spread over several years are what a search turned up, not every cut in those years, so
-the days between them are not days with power. Leave such rows without a sampling period: the atlas shows them as
-reports and uses their times, but never as a rate. For a rate, pick one recent period (say the last four weeks), and for
-each area record **every** complaint in it (X search: `UEDCL Najjera since:2026-10-22 until:2026-11-19`), then add that
-period to `sampling.csv` for every area searched, including the quiet ones.
-
-## How the estimates work
-
-With at least 6 areas watched for a week or more, the script tries to estimate days a week with a cut for every other
-named place: from the nearest watched areas, or from how each area is built (built-up, new building since 2017, tree
-cover, packed housing, distance from the centre). It predicts each watched area from the others and publishes estimates
-only if the better method beats simply using the average by at least 10 %. Hours a week come from the reports that say
-how long a cut lasted (the typical hours per cut day).
+Inside a watched period, a day with no reported cut counts as a day the power stayed on, so the area gets a rate
+(days a week with a cut). An area watched with no complaints at all counts as no cuts. This only holds if **every**
+complaint in the period was recorded; ten complaints found across several years are what a search turned up, not every
+cut, so leave those without a period: the atlas shows them as complaints and uses their times, never as a rate.
 
 ## Keep it private
 

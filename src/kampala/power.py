@@ -1,6 +1,9 @@
-"""Power cuts by area: how many days a week the power goes off, from a log of reported cuts and the periods each
-area was watched, and a small model that estimates places nobody watched, published only when it predicts held-out
-areas better than the plain average does.
+"""Power cuts for the atlas: reported cuts by area (and a rate where an area was watched over a declared period),
+upcoming planned cuts, when in the day cuts are reported, and published figures (utility records in studies, news).
+
+There is no estimate for areas nobody logged: cuts depend on the feeder line a building is on (its length, loading
+and equipment), which the atlas cannot see, so the page shows measured figures for the areas studies cover and a
+typical Kampala range elsewhere.
 
 The log (config/power/outage_log.csv) has one row per reported cut (several reports of the same day count once):
   area       neighbourhood name as people use it; matched to docs/atlas/places.json when lat/lon are empty
@@ -19,7 +22,7 @@ Rows dated after today with kind "planned" are upcoming planned cuts (advisories
 The sampling periods (config/power/sampling.csv: area,lat,lon,from,to,source) say which areas were watched over which
 dates. Inside a period, a day with no reported cut counts as a day the power stayed on. An area watched with no reports
 at all counts as no cuts. An `area` of "*" sets the period for every area without its own. An area with reports but no
-period is shown as "reports only" (its first to last report would overstate the rate) and kept out of the model.
+period is shown as "reports only": its first to last report would overstate the rate.
 
 Used by scripts/33_power.py; the page's reader is web/src/power/cuts.ts.
 """
@@ -28,21 +31,18 @@ from __future__ import annotations
 import csv
 import math
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date, timedelta
 from pathlib import Path
 
 import numpy as np
 
 COLUMNS = ["area", "lat", "lon", "date", "hours_off", "cuts", "kind", "start", "end", "reported", "source", "notes"]
-PUBLISHED_COLUMNS = ["areas", "lat", "lon", "from", "to", "cuts_per_month", "qualifier", "source", "url", "note"]
+PUBLISHED_COLUMNS = ["areas", "lat", "lon", "radius_km", "from", "to", "cuts_per_month", "hours_per_month", "basis",
+                     "qualifier", "label", "source", "url", "note"]
+BASES = {"measured", "reported"}     # measured: utility outage records; reported: news, residents
 SAMPLING_COLUMNS = ["area", "lat", "lon", "from", "to", "source"]
 KINDS = {"planned", "unplanned", "unknown"}
-CBD = (0.3136, 32.5811)              # Kampala's centre (OpenStreetMap's city node)
-FEATURES = ["built", "new_built", "trees", "informal", "dist_cbd_km"]
-MIN_AREAS = 6                        # fewer sampled areas than this: no estimates at all
-MUST_BEAT = 0.9                      # a model must cut the average's held-out error by at least 10 %
-MIN_DAYS = 7                         # an area needs a week of watching to enter the model
 
 
 @dataclass
@@ -84,7 +84,6 @@ class Area:
     hours_week: float | None         # only when every cut day says how long it lasted
     kinds: dict[str, int]
     sources: list[str]
-    features: dict[str, float] = field(default_factory=dict)
 
     @property
     def sampled(self) -> bool:
@@ -167,24 +166,31 @@ def reported_hours(rows: list[Row]) -> list[int]:
 
 
 def read_published(path: Path, places: list[dict]) -> list[dict]:
-    """Published figures (news, reports): a rate for named areas over a period, placed at the first area's location."""
+    """Published figures: cuts (and hours) a month for named areas over a period, shown within radius_km of their
+    location, which defaults to the middle of the named areas found in the place list."""
     by_name = {}
     for p in sorted(places, key=lambda p: p.get("rank", 9)):
         by_name.setdefault(p["name"].casefold(), p)
     out = []
-    for line, r in _rows(path, ("areas", "from", "to", "cuts_per_month", "source"), PUBLISHED_COLUMNS):
+    for line, r in _rows(path, ("areas", "from", "to", "cuts_per_month", "basis", "source"), PUBLISHED_COLUMNS):
         names = [a.strip() for a in (r.get("areas") or "").split(";") if a.strip()]
         lat, lon = _num(r.get("lat", ""), "lat", line), _num(r.get("lon", ""), "lon", line)
         if lat is None or lon is None:
-            hit = next((by_name[n.casefold()] for n in names if n.casefold() in by_name), None)
-            if not hit:
+            hits = [by_name[n.casefold()] for n in names if n.casefold() in by_name]
+            if not hits:
                 raise ValueError(f"line {line}: none of {names} is in places.json; give lat and lon")
-            lat, lon = hit["lat"], hit["lon"]
-        rate = _num(r.get("cuts_per_month", ""), "cuts_per_month", line)
-        out.append(dict(areas=names, lat=lat, lon=lon, **{"from": _day(r.get("from", ""), "from", line).isoformat()},
-                        to=_day(r.get("to", ""), "to", line).isoformat(), cuts_per_month=rate,
-                        qualifier=(r.get("qualifier") or "").strip(), source=(r.get("source") or "").strip(),
-                        url=(r.get("url") or "").strip(), note=(r.get("note") or "").strip()))
+            lat, lon = float(np.mean([h["lat"] for h in hits])), float(np.mean([h["lon"] for h in hits]))
+        basis = (r.get("basis") or "").strip()
+        if basis not in BASES:
+            raise ValueError(f"line {line}: basis should be one of {', '.join(sorted(BASES))}")
+        cuts = _num(r.get("cuts_per_month", ""), "cuts_per_month", line)
+        hours = _num(r.get("hours_per_month", ""), "hours_per_month", line)
+        out.append(dict(areas=names, lat=round(lat, 5), lon=round(lon, 5), radius_km=_num(r.get("radius_km", ""), "radius_km", line) or 3.0,
+                        **{"from": _day(r.get("from", ""), "from", line).isoformat()}, to=_day(r.get("to", ""), "to", line).isoformat(),
+                        cuts_per_month=cuts, hours_per_month=hours,
+                        hours_per_cut=round(hours / cuts, 2) if hours and cuts else None, basis=basis,
+                        qualifier=(r.get("qualifier") or "").strip(), label=(r.get("label") or "").strip(),
+                        source=(r.get("source") or "").strip(), url=(r.get("url") or "").strip(), note=(r.get("note") or "").strip()))
     return out
 
 
@@ -280,103 +286,3 @@ def upcoming(rows: list[Row], today: date) -> list[dict]:
     return [dict(area=r.area, lat=r.lat, lon=r.lon, date=r.day.isoformat(), start=r.start, end=r.end, hours=r.hours_off,
                  source=public_source(r.source) or "")
             for r in sorted(rows, key=lambda r: (r.day, r.start, r.area)) if r.kind == "planned" and r.day >= today and r.lat is not None]
-
-
-# ---- what each place is like, from the atlas layers
-
-def shares(lc: np.ndarray, growth: np.ndarray, informal: np.ndarray) -> dict[str, float]:
-    """Features from the land-cover, growth and housing classes inside one circle (class codes as in atlas.json)."""
-    land = lc > 0
-    n = max(int(land.sum()), 1)
-    built = np.isin(lc, (1, 2))
-    grown = growth > 0
-    return dict(
-        built=float(built.sum() / n),
-        new_built=float(np.isin(growth, (2, 3)).sum() / max(int(grown.sum()), 1)),
-        trees=float((lc == 3).sum() / n),
-        informal=float((informal == 1).sum() / n),
-    )
-
-
-def disk(radius_cells: float) -> tuple[np.ndarray, np.ndarray]:
-    r = int(math.ceil(radius_cells))
-    dy, dx = np.mgrid[-r:r + 1, -r:r + 1]
-    keep = dy ** 2 + dx ** 2 <= radius_cells ** 2
-    return dy[keep], dx[keep]
-
-
-def features_at(row: float, col: float, layers: dict[str, np.ndarray], offsets: tuple[np.ndarray, np.ndarray],
-                lat: float, lon: float) -> dict[str, float] | None:
-    """Features in the circle around grid cell (row, col), or None when the circle is off the grid."""
-    h, w = layers["lc"].shape
-    rr = np.round(row).astype(int) + offsets[0]
-    cc = np.round(col).astype(int) + offsets[1]
-    ok = (rr >= 0) & (rr < h) & (cc >= 0) & (cc < w)
-    if ok.mean() < 0.5:
-        return None
-    rr, cc = rr[ok], cc[ok]
-    f = shares(layers["lc"][rr, cc], layers["growth"][rr, cc], layers["informal"][rr, cc])
-    f["dist_cbd_km"] = km((lat, lon), CBD)
-    return f
-
-
-# ---- the model
-
-def _ridge_fit(X: np.ndarray, y: np.ndarray, alpha: float):
-    mu, sd = X.mean(axis=0), X.std(axis=0)
-    sd[sd == 0] = 1
-    Z = (X - mu) / sd
-    beta = np.linalg.solve(Z.T @ Z + alpha * np.eye(Z.shape[1]), Z.T @ (y - y.mean()))
-    return lambda Xn: y.mean() + ((Xn - mu) / sd) @ beta
-
-
-def _idw(train: list[tuple[float, float]], y: np.ndarray, power: float = 2.0):
-    def predict(points: list[tuple[float, float]]) -> np.ndarray:
-        out = []
-        for p in points:
-            d = np.array([max(km(p, q), 0.2) for q in train])
-            wgt = d ** -power
-            out.append(float((wgt * y).sum() / wgt.sum()))
-        return np.array(out)
-    return predict
-
-
-@dataclass
-class Model:
-    chosen: str
-    used: bool
-    n: int
-    loo_mae: dict[str, float]
-    predict: object = None          # (points, feature matrix) -> cut days a week
-
-    def summary(self) -> dict:
-        return dict(chosen=self.chosen, used=self.used, areas=self.n, loo_mae_cut_days_week={k: round(v, 2) for k, v in self.loo_mae.items()})
-
-
-def choose_model(train: list[Area], alpha: float = 2.0) -> Model:
-    """Leave-one-area-out error in cut days a week for the average, nearest areas (inverse distance) and a ridge
-    regression on the place features, over sampled areas watched for at least MIN_DAYS; the best is used only with
-    enough areas and when it beats the average by MUST_BEAT."""
-    use = [a for a in train if a.sampled and a.days >= MIN_DAYS and a.features]
-    n = len(use)
-    if n < 3:
-        return Model("average", False, n, {})
-    y = np.array([a.cut_days_week for a in use])
-    pts = [(a.lat, a.lon) for a in use]
-    X = np.array([[a.features[f] for f in FEATURES] for a in use])
-    errs = {"average": [], "nearest areas": [], "area features": []}
-    for i in range(n):
-        keep = [j for j in range(n) if j != i]
-        errs["average"].append(abs(y[keep].mean() - y[i]))
-        errs["nearest areas"].append(abs(_idw([pts[j] for j in keep], y[keep])([pts[i]])[0] - y[i]))
-        errs["area features"].append(abs(_ridge_fit(X[keep], y[keep], alpha)(X[i:i + 1])[0] - y[i]))
-    mae = {k: float(np.mean(v)) for k, v in errs.items()}
-    best = min(("nearest areas", "area features"), key=lambda k: mae[k])
-    used = n >= MIN_AREAS and mae[best] <= MUST_BEAT * mae["average"]
-    if best == "nearest areas":
-        f = _idw(pts, y)
-        predict = lambda points, _X: f(points)            # noqa: E731
-    else:
-        g = _ridge_fit(X, y, alpha)
-        predict = lambda _points, Xn: g(Xn)                # noqa: E731
-    return Model(best if used else "average", used, n, mae, predict if used else None)
