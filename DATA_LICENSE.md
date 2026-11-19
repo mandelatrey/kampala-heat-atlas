@@ -3,7 +3,8 @@
 The **code** in this repository is MIT-licensed (see `LICENSE`). The **maps, figures and derived
 layers** on the website inherit the licences of their inputs. Because FABDEM is non-commercial,
 any product that uses the terrain model (hillshade, 3D district models, shade and sky-view layers)
-is **for non-commercial use only (CC BY-NC-SA 4.0)**.
+is **for non-commercial use only (CC BY-NC-SA 4.0)**. The atlas layers offered for download
+(`docs/atlas/layers/*.tif`) carry the licences of the inputs listed for each layer.
 
 | Input | Provider | Licence | Used for |
 |---|---|---|---|
@@ -20,6 +21,7 @@ is **for non-commercial use only (CC BY-NC-SA 4.0)**.
 | Global LCZ map | Demuzere et al. 2022 | CC BY 4.0 | Local Climate Zones |
 | Kampala Slum Profiles map book (23 Aug 2014) | SDI / NSDFU / ACTogether Uganda | © the publishers; cited, not redistributed | Validation of the settlement layer (outlines shown in one check figure) |
 | PVGIS-ERA5 | European Commission JRC | Free use with attribution | Validation of solar yield |
+| OpenFreeMap street map (OpenMapTiles schema, OpenStreetMap data) | OpenFreeMap | ODbL 1.0 (data); free, no key | Street map and labels under the atlas layers (loaded live, not redistributed) |
 
 © OpenStreetMap contributors. Contains modified Copernicus Sentinel data (2016–2025) and Copernicus
 Climate Change Service information. Electricity sales: Umeme Annual Report 2024.

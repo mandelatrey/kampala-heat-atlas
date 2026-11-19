@@ -1,5 +1,5 @@
 // Between latitude/longitude (WGS84) and the atlas grid (UTM, a 30 m pixel grid), so the map can place
-// names and say where the cursor is. Transverse Mercator by the Krüger series (Karney 2011), accurate to
+// the layers and read the cell under the cursor. Transverse Mercator by the Krüger series (Karney 2011), accurate to
 // well under a millimetre this close to the central meridian.
 
 const A = 6378137;
@@ -80,34 +80,40 @@ export interface Grid {
 }
 
 /**
- * The map's coordinates: Leaflet CRS.Simple with the image spanning [[0, 0], [H, W]], so a point's
- * "lat" is H minus its row and its "lng" is its column.
+ * Where the atlas grid (height x width cells, rows from the top) sits on the map, and the cell under a point.
+ *
+ * The page pins each layer image to the map by its four corners. In between, the map stretches the image
+ * linearly, while the grid is square in UTM rather than in latitude/longitude; this close to the equator and
+ * the zone's central meridian that costs a few metres across the whole study area (tested), far under a 30 m cell.
  */
-export function gridProjection(grid: Grid, height: number) {
+export function gridGeo(grid: Grid, height: number, width: number) {
   const { zone, south } = utmZone(grid.crs);
+  const [x0, y0] = grid.origin;
+  const latLonAt = (row: number, col: number) => fromUtm(x0 + col * grid.pixel, y0 - row * grid.pixel, zone, south);
+  const [nwLat, nwLon] = latLonAt(0, 0);
+  const [neLat, neLon] = latLonAt(0, width);
+  const [swLat, swLon] = latLonAt(height, 0);
+  const [seLat, seLon] = latLonAt(height, width);
+  const bounds: [[number, number], [number, number]] = [
+    [(swLat + seLat) / 2, (nwLon + swLon) / 2],
+    [(nwLat + neLat) / 2, (neLon + seLon) / 2],
+  ];
   return {
-    /** [lat, lon] -> map [y, x] */
-    toMap(lat: number, lon: number): [number, number] {
+    /** [[south, west], [north, east]] in degrees */
+    bounds,
+    /** [lon, lat] of the top-left, top-right, bottom-right and bottom-left corners (MapLibre image sources) */
+    corners: [[nwLon, nwLat], [neLon, neLat], [seLon, seLat], [swLon, swLat]] as [[number, number], [number, number], [number, number], [number, number]],
+    /** [lat, lon] of a point given as fractional [row, col] (0, 0 = the top-left corner) */
+    latLonAt,
+    /** fractional [row, col] of a point; outside the grid when < 0 or >= height/width */
+    cellAt(lat: number, lon: number): [number, number] {
       const [x, y] = toUtm(lat, lon, zone, south);
-      return [height - (grid.origin[1] - y) / grid.pixel, (x - grid.origin[0]) / grid.pixel];
+      return [(y0 - y) / grid.pixel, (x - x0) / grid.pixel];
     },
-    /** map [y, x] -> [lat, lon] */
-    toLatLon(my: number, mx: number): [number, number] {
-      return fromUtm(grid.origin[0] + mx * grid.pixel, grid.origin[1] - (height - my) * grid.pixel, zone, south);
-    },
-    /** metres per map unit */
-    metresPerUnit: grid.pixel,
   };
 }
 
 /** "0.3136° N, 32.5811° E" */
 export function formatLatLon(lat: number, lon: number): string {
   return `${Math.abs(lat).toFixed(4)}° ${lat >= 0 ? "N" : "S"}, ${Math.abs(lon).toFixed(4)}° ${lon >= 0 ? "E" : "W"}`;
-}
-
-/** A round scale-bar length (1, 2, 5 × 10^k metres) that fits in maxMetres, and its label. */
-export function niceScale(maxMetres: number): { metres: number; label: string } {
-  const p = 10 ** Math.floor(Math.log10(maxMetres));
-  const m = [5, 2, 1].map((s) => s * p).find((v) => v <= maxMetres) ?? p;
-  return { metres: m, label: m >= 1000 ? `${m / 1000} km` : `${m} m` };
 }

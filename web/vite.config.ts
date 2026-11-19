@@ -8,11 +8,12 @@ import react from "@vitejs/plugin-react";
 // served from /, so those URLs become /atlas/..., /site-weather/...; this serves them from docs/.
 // Any file under docs/ is served, so a newly moved page needs no change here, except docs/index.html
 // (it forwards to the built app) and docs/app/ (the built copy of this app).
-const DOCS = resolve(import.meta.dirname, "../docs");
+// KHA_DOCS=/some/other/docs npm run dev previews a pipeline run written somewhere else, before committing it.
+const DOCS = resolve(process.env.KHA_DOCS ?? resolve(import.meta.dirname, "../docs"));
 const TYPES: Record<string, string> = {
   ".json": "application/json", ".csv": "text/csv; charset=utf-8", ".md": "text/markdown; charset=utf-8",
   ".png": "image/png", ".jpg": "image/jpeg", ".gif": "image/gif", ".mp4": "video/mp4", ".pdf": "application/pdf",
-  ".txt": "text/plain; charset=utf-8", ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript",
+  ".txt": "text/plain; charset=utf-8", ".tif": "image/tiff", ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript",
 };
 
 /** The docs/ file a dev-server request should get, or null to let Vite handle it. */
@@ -50,6 +51,7 @@ function serveDocs(): Plugin {
 export default defineConfig({
   base: "./",
   plugins: [react(), serveDocs()],
-  // the 3D viewer chunk (deck.gl, ~200 kB gzipped) is loaded only on its own page
-  build: { outDir: "../docs/app", emptyOutDir: true, chunkSizeWarningLimit: 800 },
+  // big chunks load only where they are used: the 3D viewer (deck.gl, ~220 kB gzipped) on its own page,
+  // MapLibre (~300 kB gzipped) when the atlas map is shown
+  build: { outDir: "../docs/app", emptyOutDir: true, chunkSizeWarningLimit: 1200 },
 });

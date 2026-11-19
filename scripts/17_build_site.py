@@ -1,6 +1,6 @@
 """Build the public GitHub Pages site in docs/.
 
-    docs/atlas/         data for the 2D atlas (scripts/14_atlas.py); the page is the React app in web/,
+    docs/atlas/         data for the 2D atlas (scripts/14_atlas.py, 14c_atlas_stats.py); the page is the React app in web/,
                         built into docs/app/, and docs/index.html forwards to it
     docs/data/districts.json   the three model districts (label, data file, centre, bounds, stats) for
                         the 3D viewer, which is the React app's #/3d route; docs/3d.html forwards to it
@@ -56,6 +56,7 @@ input[type=range]{{max-width:900px;width:100%;accent-color:var(--blue)}}
 
 # ---------------------------------------------------------------- 2D atlas (data only; writes docs/atlas/)
 subprocess.run([sys.executable, str(ROOT / "scripts" / "14_atlas.py"), str(DOCS)], check=True)
+subprocess.run([sys.executable, str(ROOT / "scripts" / "14c_atlas_stats.py"), str(DOCS)], check=True)
 
 # ---------------------------------------------------------------- 3D viewer data
 summary = pd.read_csv(TAB / "m6_district_summary.csv").set_index("district")

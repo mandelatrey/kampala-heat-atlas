@@ -3,14 +3,14 @@
     python scripts/14_atlas.py <output_dir>          # scripts/17_build_site.py passes docs/
 
 Writes <output_dir>/atlas/:
-  atlas.json        grid size and georeference, years, headline numbers, legend ramps, and the layer, chart and
-                    animation list with each file's path (the contract is web/src/atlas/types.ts)
-  base.jpg          FABDEM hillshade
-  layers/<id>.png   every raster layer as a transparent PNG on the shared 30 m grid (same bounds),
-                    shown over the hillshade in Leaflet (CRS.Simple, pan/zoom)
-  charts/<id>.png, anims/<id>.gif   the module figures
+  atlas.json        grid size and georeference, years, and the layer list: each layer's file, how its stored
+                    integers become values, and the colours the page draws it with (contract: web/src/atlas/types.ts)
+  base.jpg          FABDEM hillshade (an optional relief shading under the layers)
+  layers/<id>.tif   every map layer as data: a Cloud-Optimized GeoTIFF on the shared 30 m grid (UTM 36N), with
+                    scale, nodata and units set, so the page can colour it, read values under the cursor, and
+                    anyone can open the same file in QGIS
 
-Headline numbers are read from the result tables so the page always matches the latest run.
+Numbers and charts come from the result tables: scripts/14c_atlas_stats.py writes stats.json next to these.
 """
 import io
 import json
@@ -22,23 +22,25 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import rasterio
-from matplotlib.colors import to_rgba
 from PIL import Image
 
 from kampala import config
 from kampala import viz as V
-from kampala.config import DATA, OUTPUTS, FIGURES
+from kampala.config import DATA
+from kampala.weblayers import class_layer, ramp_layer
 
 OUT = Path(sys.argv[1]) / "atlas"
-shutil.rmtree(OUT, ignore_errors=True)                     # generated folder: start clean, no stale layers
+# generated parts only: start them clean (no stale layers); stats.json and tables/ belong to 14c_atlas_stats.py
 for d in ("layers", "charts", "anims"):
-    (OUT / d).mkdir(parents=True, exist_ok=True)
-P, TAB, FIG = DATA / "processed", OUTPUTS / "tables", FIGURES
+    shutil.rmtree(OUT / d, ignore_errors=True)
+(OUT / "layers").mkdir(parents=True, exist_ok=True)
+P = DATA / "processed"
 EP = config.load()["epochs"]; Y = [s["year"] for s in EP.values()]
 
 with rasterio.open(P / "m0" / "terrain_fabdem_30m.tif") as r:
-    H, W, T = r.height, r.width, r.transform
+    H, W, T, CRS = r.height, r.width, r.transform, r.crs
     hs = r.read(4).astype(float)
+LAYERS = OUT / "layers"
 
 
 def fit(a):
@@ -56,51 +58,83 @@ def save(rel, im, fmt, **kw):
     return rel
 
 
-def png(rgba, name, max_w=1100):
-    im = Image.fromarray((np.clip(rgba, 0, 1) * 255).astype("uint8"), "RGBA")
-    if im.width > max_w:
-        im = im.resize((max_w, round(im.height * max_w / im.width)), Image.NEAREST)
-    return save(f"layers/{name}.png", im, "PNG", optimize=True)
-
-
-def classes(a, colors):
-    rgba = np.zeros(a.shape + (4,))
-    for k, c in enumerate(colors, start=1):
-        rgba[a == k] = to_rgba(c)
-    return rgba
-
-
-def continuous(a, cmap, vmin, vmax, mask):
-    rgba = cmap(np.clip((a - vmin) / (vmax - vmin), 0, 1))
-    rgba[mask] = 0
-    return rgba
-
-
 def rd(path, band=1, step=1):
     with rasterio.open(path) as r:
         return r.read(band)[::step, ::step]
 
 
-layers = {}
-g = np.clip((hs - np.nanpercentile(hs, 2)) / (np.nanpercentile(hs, 98) - np.nanpercentile(hs, 2)), 0, 1)
-base = np.dstack([0.55 + 0.4 * g] * 3 + [np.ones_like(g)])
-_im = Image.fromarray((base[..., :3] * 255).astype("uint8"), "RGB")
-_im = _im.resize((1100, round(_im.height * 1100 / _im.width)), Image.LANCZOS)
-BASE = save("base.jpg", _im, "JPEG", quality=78)   # opaque base -> JPEG
+def classes(name, a, colors, names):
+    return class_layer(LAYERS, name, fit(a), colors, names, CRS, T)
 
-for ep, s in EP.items():
-    layers[f"thermal-{s['year']}"] = png(classes(fit(rd(P / "m2" / f"thermal_classes_{ep}_{s['year']}_30m.tif")), V.THERMAL.colors), f"thermal-{s['year']}")
+
+def ramp(name, a, **kw):
+    return ramp_layer(LAYERS, name, fit(a), crs=CRS, transform=T, **kw)
+
+
+DIVERGING = V.BLUE[::-1][:6] + [V.NEUTRAL] + V.REDS[1:]        # the stops of V.DIVERGING
+
+g = np.clip((hs - np.nanpercentile(hs, 2)) / (np.nanpercentile(hs, 98) - np.nanpercentile(hs, 2)), 0, 1)
+_im = Image.fromarray((np.dstack([0.55 + 0.4 * g] * 3) * 255).astype("uint8"), "RGB")
+_im = _im.resize((1100, round(_im.height * 1100 / _im.width)), Image.LANCZOS)
+BASE = save("base.jpg", _im, "JPEG", quality=78)
+
+THERMAL = dict(colors=list(V.THERMAL.colors), names=V.THERMAL_NAMES)
+layers = []                                                    # in panel order
+
+
+def add(id_, group, label, caption, data):
+    layers.append(dict(id=id_, group=group, label=label, caption=caption, **data))
+
+
+# ---- heat
 a1 = fit(rd(P / "m2" / f"lst_landsat_t1_{Y[0]}_30m.tif", 2)); a3 = fit(rd(P / "m2" / f"lst_landsat_t3_{Y[2]}_30m.tif", 2))
 lc25 = fit(rd(P / "m1" / f"landcover_t3_{Y[2]}_10m.tif", 1, 3))
-layers["lst-change"] = png(continuous(a3 - a1, V.DIVERGING, -4, 4, (lc25 == 7) | ~np.isfinite(a3 - a1)), "lst-change")
-layers["lst-2025"] = png(continuous(a3, V.DIVERGING, -8, 8, (lc25 == 7) | ~np.isfinite(a3)), "lst-2025")
-layers["landcover-2017"] = png(classes(fit(rd(P / "m1" / f"landcover_t1_{Y[0]}_10m.tif", 1, 3)), V.LANDCOVER), "landcover-2017")
-layers["landcover-2025"] = png(classes(lc25, V.LANDCOVER), "landcover-2025")
-layers["growth"] = png(classes(fit(rd(P / "m1" / "growth_frontier_10m.tif", 1, 3)), ["#a9a8a0", V.ORANGES[3], V.REDS[5]]), "growth")
+water = lc25 == 7                                              # the anomaly is against the city LAND mean
+add("lst-2025", "Heat", f"Surface heat {Y[2]}",
+    "Land surface temperature minus the city land mean (dry-season median over three years). Gap-free: computed from the "
+    "thermal band with NDVI-based emissivity and calibrated to the Collection 2 product. This is the temperature of the "
+    "ground and roofs, which runs well above the air temperature people feel.",
+    ramp("lst-2025", a3, mask=water, step=0.05, unit="°C", colors=DIVERGING, vmin=-8, vmax=8,
+         labels=["8 °C cooler", "city average", "8 °C hotter"], readout="{v} °C vs the city average", decimals=1, signed=True))
+add("lst-change", "Heat", f"Heat change {Y[0]}–{Y[2]}",
+    "Change in surface heat relative to the city, between the two maps. Read local contrasts; broad regional bands in the "
+    "west may include compositing differences.",
+    ramp("lst-change", a3 - a1, mask=water, step=0.05, unit="°C", colors=DIVERGING, vmin=-4, vmax=4,
+         labels=["cooled 4 °C", "no change", "warmed 4 °C"], readout="{v} °C since " + str(Y[0]), decimals=1, signed=True))
+for i, (ep, s) in enumerate(reversed(list(EP.items()))):
+    add(f"thermal-{s['year']}", "Heat", f"Thermal classes {s['year']}",
+        "Surface heat classed by distance from the city land mean (±0.5 and ±1.5 standard deviations)." if i == 0
+        else f"Same method, {s['year']} window.",
+        classes(f"thermal-{s['year']}", rd(P / "m2" / f"thermal_classes_{ep}_{s['year']}_30m.tif"), **THERMAL))
+add("hot-persistence", "Heat", "Persistent hot spots",
+    f"How many of the three epochs ({', '.join(map(str, Y))}) each 30 m cell was in the hottest class.",
+    classes("hot-persistence", rd(P / "m2" / "hot_persistence_count_30m.tif"), [V.REDS[1], V.REDS[3], V.REDS[6]],
+            ["hot in 1 epoch", "hot in 2 epochs", "hot in all 3"]))
+
+# ---- growth
+LC = dict(colors=V.LANDCOVER, names=V.LC_NAMES)
+add("landcover-2025", "Growth", f"Land cover {Y[2]}",
+    "Sentinel-2 random forest, 10 m, trained on Dynamic World labels; built-up requires building evidence within about 30 m.",
+    classes("landcover-2025", lc25, **LC))
+add("landcover-2017", "Growth", f"Land cover {Y[0]}", f"Same method, {Y[0]} (Sentinel-2 L1C).",
+    classes("landcover-2017", rd(P / "m1" / f"landcover_t1_{Y[0]}_10m.tif", 1, 3), **LC))
+add("growth", "Growth", "Where the city grew", "First epoch in which each 10 m pixel is mapped as built-up.",
+    classes("growth", rd(P / "m1" / "growth_frontier_10m.tif", 1, 3), ["#a9a8a0", V.ORANGES[3], V.REDS[5]],
+            [f"built by {Y[0]}", f"new {Y[0]}–{Y[1]}", f"new {Y[1]}–{Y[2]}"]))
+
+# ---- people
 inf = np.kron(rd(P / "m3" / f"settlement_groups_t3_{Y[2]}_90m.tif"), np.ones((3, 3), dtype="uint8"))
-layers["informal-2025"] = png(classes(fit((inf == 1).astype("uint8")), ["#1b1b1f"]), "informal-2025")
-layers["trees"] = png(classes(fit(rd(P / "m4" / "tree_priority_classes_30m.tif")),
-                              [V.GREENS[1], V.GREENS[2], V.GREENS[4], V.GREENS[6]]), "trees")
+add("informal-2025", "People", "Informal-type settlement",
+    "90 m cells with ≥35 % roof cover, mean footprint ≤80 m², ≥30 buildings/ha, low roofs, in clusters ≥2.4 ha. "
+    "A morphology proxy that misses mixed-use areas such as Kisenyi.",
+    classes("informal-2025", (inf == 1), ["#1b1b1f"], ["informal-type morphology"]))
+
+# ---- response
+add("trees", "Response", "Tree-planting priority",
+    "Heat rank × population rank (×1.5 in informal-type areas) × canopy deficit, only where open grass, cropland or bare "
+    "land exists on slopes under 30°. Wetlands are never plantable.",
+    classes("trees", rd(P / "m4" / "tree_priority_classes_30m.tif"), [V.GREENS[1], V.GREENS[2], V.GREENS[4], V.GREENS[6]],
+            ["low", "medium", "high", "very high"]))
 
 # rooftop solar density: GWh per km2 on 240 m blocks of the master grid
 sol = pd.read_parquet(P / "m5" / "rooftop_solar_buildings.parquet")
@@ -113,102 +147,23 @@ grid = np.zeros((H, W)); np.add.at(grid, (rows[ok], cols[ok]), sol["kwh_yr"].val
 k = 8
 hb, wb = H // k, W // k
 blk = grid[:hb * k, :wb * k].reshape(hb, k, wb, k).sum(axis=(1, 3)) / 1e6 / ((k * 30) ** 2 / 1e6)
-sd = fit(np.kron(blk, np.ones((k, k))))
-layers["solar"] = png(continuous(sd, V.seq(V.ORANGES), 0, float(np.percentile(blk[blk > 0], 99)), sd < 0.5), "solar")
 solar_max = float(np.percentile(blk[blk > 0], 99))
+add("solar", "Response", "Rooftop solar potential",
+    f"{len(sol) / 1e6:.1f} million Overture roofs, ERA5-Land irradiance 2015–2024, 21 % modules, 0.80 performance ratio, "
+    "shading from neighbouring building heights; summed over 240 m blocks.",
+    ramp("solar", np.kron(blk, np.ones((k, k))), step=0.01, unit="GWh/km²/yr", colors=V.ORANGES, vmin=0,
+         vmax=round(solar_max), labels=["0", "GWh per km² a year", f"{solar_max:.0f}"],
+         readout="{v} GWh per km² a year from rooftops", decimals=1, hide_below=0.5))
 
+for _f in sorted(OUT.glob("layers/*")) + [OUT / BASE]:
+    print(f"  {_f.relative_to(OUT)!s:30s} {_f.stat().st_size / 1e6:.2f} MB")
 
-def chart(name, path, width=900):
-    im = Image.open(path)
-    if im.width > width:
-        im = im.resize((width, round(im.height * width / im.width)), Image.LANCZOS)
-    return save(f"charts/{name}.png", im.convert("RGB").quantize(256), "PNG", optimize=True)
-
-
-def anim(name, path, width=520, every=1):
-    im = Image.open(path); frames, durs = [], []
-    try:
-        while True:
-            if im.tell() % every == 0:
-                f = im.convert("RGB"); frames.append(f.resize((width, round(f.height * width / f.width)), Image.LANCZOS))
-                durs.append(im.info.get("duration", 100) * every)
-            im.seek(im.tell() + 1)
-    except EOFError:
-        pass
-    return save(f"anims/{name}.gif", frames[0], "GIF", save_all=True, append_images=frames[1:], duration=durs, loop=0, optimize=True)
-
-
-charts = {n: chart(n, FIG / f) for n, f in {
-    "lcz": "fig_m2_lcz_dumbbell.png", "traj": "fig_m3_trajectories.png", "class": "fig_m1_class_change.png",
-    "solar": "fig_m5_scenarios.png", "trees": "fig_m4_priority_bars.png", "cube": "fig_m0_cube_cbd.png"}.items()}
-anims = {"wind": anim("wind", FIG / "anim_m0_diurnal_wind.gif", 440), "cube": anim("cube", FIG / "anim_m0_cube_rotate.gif", 460, every=2)}
-for _f in sorted(OUT.rglob("*.*")):
-    print(f"  {_f.relative_to(OUT)!s:26s} {_f.stat().st_size / 1e6:.2f} MB")
-
-# ---- numbers
-area = pd.read_csv(TAB / "m1_class_area.csv", index_col=0)
-built = area.loc[["built_dense", "built_sparse"]].sum()
-th = pd.read_csv(TAB / "m2_thermal_class_area.csv")
-hot = th[th.name == "hot"].set_index("year")["km2"]
-traj = pd.read_csv(TAB / "m3_thermal_trajectories.csv", index_col=0)
-grp = pd.read_csv(TAB / "m3_lst_by_settlement_group.csv")
-g25 = grp[grp.year == Y[2]].set_index("group")["LST_anom_mean"]
-tree = pd.read_csv(TAB / "m4_planting_scenario.csv", index_col=0)["value"]
-pri = pd.read_csv(TAB / "m4_priority_summary.csv").set_index("priority")
-st = pd.read_csv(TAB / "m5_solar_totals.csv", index_col=0)["value"]
-cal = pd.read_csv(TAB / "m2_lst_calibration.csv")
-diag = [json.loads((TAB / f"m1_{e}_diagnostics.json").read_text()) for e in EP]
-num = dict(
-    built0=f"{built.iloc[0]:.0f}", built2=f"{built.iloc[2]:.0f}", builtpct=f"{100 * (built.iloc[2] / built.iloc[0] - 1):.0f}",
-    hot0=f"{hot.loc[Y[0]]:.0f}", hot2=f"{hot.loc[Y[2]]:.0f}",
-    inf=f"{g25['informal-type']:.1f}", formal=f"{g25['formal dense']:.1f}",
-    became=f"{traj.loc['became informal-type', 'change_2017_2025']:+.1f}",
-    formalchg=f"{traj.loc['always formal dense', 'change_2017_2025']:+.1f}",
-    cool10=f"{tree['cooling_per_10pct_canopy_C']:.2f}", treecool=f"{tree['mean_cooling_C']:.1f}",
-    treepeople=f"{tree['people_in_planted_cells'] / 1000:.0f}", newcanopy=f"{tree['new_canopy_km2']:.0f}",
-    vh_people=f"{pri.loc['very high', 'people'] / 1000:.0f}", vh_km2=f"{pri.loc['very high', 'km2']:.0f}",
-    gwp=f"{st['capacity_GWp']:.0f}", twh=f"{st['generation_GWh_yr'] / 1000:.0f}", roofs=f"{st['buildings'] / 1e6:.1f}",
-    yield_=f"{st['specific_yield_kWh_per_kWp']:,.0f}",
-    r_min=f"{cal.r_vs_C2ST.min():.2f}", r_max=f"{cal.r_vs_C2ST.max():.2f}",
-    agree=f"{min(d['label_agreement'] for d in diag) * 100:.0f}–{max(d['label_agreement'] for d in diag) * 100:.0f}",
-)
-
-LAYERS = [
-    # id, group, label, legend-type, legend payload, caption
-    ("thermal-2025", "Heat", f"Thermal classes {Y[2]}", "classes", list(zip(V.THERMAL.colors, V.THERMAL_NAMES)),
-     "Landsat 8/9 land surface temperature, dry-season median over three years, classed by distance from the city land mean (±0.5 and ±1.5 standard deviations)."),
-    ("thermal-2021", "Heat", f"Thermal classes {Y[1]}", "classes", list(zip(V.THERMAL.colors, V.THERMAL_NAMES)), "Same method, 2021 window."),
-    ("thermal-2017", "Heat", f"Thermal classes {Y[0]}", "classes", list(zip(V.THERMAL.colors, V.THERMAL_NAMES)), "Same method, 2017 window."),
-    ("lst-2025", "Heat", f"Surface heat {Y[2]} (°C)", "ramp", ["-8 °C", "city mean", "+8 °C", "diverging"],
-     "Land surface temperature minus the city land mean. Gap-free: computed from the thermal band with NDVI-based emissivity and calibrated to the Collection 2 product."),
-    ("lst-change", "Heat", f"Heat change {Y[0]}–{Y[2]}", "ramp", ["cooled 4 °C", "no change", "warmed 4 °C", "diverging"],
-     "Difference of the two relative-heat maps. Read local contrasts; broad regional bands in the west may include compositing differences."),
-    ("landcover-2025", "Growth", f"Land cover {Y[2]}", "classes", list(zip(V.LANDCOVER, V.LC_NAMES)),
-     "Sentinel-2 random forest, 10 m, trained on Dynamic World labels; built-up requires building evidence within about 30 m."),
-    ("landcover-2017", "Growth", f"Land cover {Y[0]}", "classes", list(zip(V.LANDCOVER, V.LC_NAMES)), "Same method, 2017 (Sentinel-2 L1C)."),
-    ("growth", "Growth", "Where the city grew", "classes",
-     list(zip(["#a9a8a0", V.ORANGES[3], V.REDS[5]], [f"built by {Y[0]}", f"new {Y[0]}–{Y[1]}", f"new {Y[1]}–{Y[2]}"])),
-     "First epoch in which each 10 m pixel is mapped as built-up."),
-    ("informal-2025", "People", "Informal-type settlement", "classes", [("#1b1b1f", "informal-type morphology")],
-     "90 m cells with ≥35 % roof cover, mean footprint ≤80 m², ≥30 buildings/ha, low roofs, in clusters ≥2.4 ha. A morphology proxy that misses mixed-use areas such as Kisenyi."),
-    ("trees", "Response", "Tree-planting priority", "classes",
-     list(zip([V.GREENS[1], V.GREENS[2], V.GREENS[4], V.GREENS[6]], ["low", "medium", "high", "very high"])),
-     "Heat rank × population rank (×1.5 in informal-type areas) × canopy deficit, only where open grass, cropland or bare land exists on slopes under 30°. Wetlands are never plantable."),
-    ("solar", "Response", "Rooftop solar potential", "ramp", ["0", "GWh/km²/yr", f"{solar_max:.0f}", "sequential"],
-     "2.0 million Overture roofs, ERA5-Land irradiance 2015–2024, 21 % modules, 0.80 performance ratio, shading from neighbouring building heights."),
-]
-
-legend_ramps = {
-    "diverging": "linear-gradient(90deg," + ",".join(V.BLUE[::-1][:6] + [V.NEUTRAL] + V.REDS[1:]) + ")",
-    "sequential": "linear-gradient(90deg," + ",".join(V.ORANGES) + ")",
-}
 manifest = dict(
-    size=[H, W], years=Y, numbers=num, ramps=legend_ramps, base=BASE,
+    size=[H, W], years=Y, base=BASE,
     # where the grid sits: pixel (row r, col c) has its top-left corner at x = origin[0] + c * pixel,
-    # y = origin[1] - r * pixel in crs; the page uses it to place names and read coordinates
+    # y = origin[1] - r * pixel in crs; the page uses it to place the layers on the map and read values
     grid=dict(crs=config.load()["study_area"]["crs"], origin=[round(T.c, 3), round(T.f, 3)], pixel=round(T.a, 6)),
-    layers=[dict(id=i, group=gp, label=lb, kind=kd, legend=lg, caption=cp, src=layers[i]) for i, gp, lb, kd, lg, cp in LAYERS],
-    charts=charts, anims=anims,
+    layers=layers,
 )
 (OUT / "atlas.json").write_text(json.dumps(manifest, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
 print(f"wrote {OUT} ({sum(f.stat().st_size for f in OUT.rglob('*.*')) / 1e6:.1f} MB)")
