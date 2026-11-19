@@ -235,3 +235,39 @@ details.how .callout { margin-top: 12px; }
 .swipe-tag { position: absolute; top: 92px; padding: 3px 8px; border-radius: 8px; background: rgb(20 22 26 / .82); color: #fff; font: 600 12px var(--f-mono); white-space: nowrap; }
 .swipe-tag.left { right: 8px; }
 .swipe-tag.right { left: 8px; }
+
+/* solar calculator, under the rooftop solar module */
+.linkbtn { border: 0; background: none; padding: 0; font: inherit; color: var(--ink); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.linkbtn:hover { color: var(--accent); }
+.calc { display: grid; gap: 16px; border-top: 1px solid var(--line); padding-top: 18px; }
+.calc-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.calc-head h3 { margin: 0; font-size: 18px; font-weight: 620; letter-spacing: -0.01em; }
+.calc-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 24px; align-items: start; }
+.calc-in { display: grid; gap: 14px; }
+.calc-field { display: grid; gap: 4px; }
+.calc-field label { display: grid; gap: 6px; cursor: pointer; }
+.calc-label { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; color: var(--ink-2); }
+.calc-label b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.calc-field input[type="range"] { width: 100%; accent-color: var(--ink); }
+.calc-hint { font-size: 12.5px; color: var(--muted); }
+.calc-bill, .calc-prices input { width: 9em; padding: 4px 8px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); color: var(--ink); font: 13px var(--f-mono); }
+.calc-in .toggle { white-space: normal; font-size: 13px; }
+.calc-prices summary { cursor: pointer; font-size: 13px; color: var(--ink-2); }
+.calc-prices label { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+.calc-prices .fine { margin-top: 8px; }
+.calc-out { display: grid; gap: 14px; background: var(--surface-2); border-radius: 14px; padding: 16px; }
+.calc-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.calc-tiles > div { display: grid; gap: 4px; align-content: start; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; min-width: 0; }
+.calc-tiles b { font-size: 21px; font-weight: 620; letter-spacing: -0.02em; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.calc-tiles span:last-child { font-size: 12.5px; color: var(--ink-2); }
+.calc-lines { margin: 0; padding-left: 18px; display: grid; gap: 8px; font-size: 14px; color: var(--ink-2); }
+.calc-lines li::marker { color: var(--accent); }
+.calc-lines li.power::marker { color: var(--warning); }
+@media (max-width: 860px) {
+  .calc-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+  .calc-tiles { grid-template-columns: minmax(0, 1fr); }
+  .calc-tiles > div { grid-template-columns: auto 1fr; align-items: baseline; gap: 4px 10px; }
+  .calc-tiles > div span:last-child { grid-column: 1 / -1; }
+}

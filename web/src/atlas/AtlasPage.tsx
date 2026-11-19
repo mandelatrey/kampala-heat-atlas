@@ -7,6 +7,7 @@ import { AtlasMap } from "./AtlasMap";
 import { LandcoverChart, LczChart, SolarChart, TrajectoryChart, TreesChart, WindRose } from "./charts";
 import { atlasUrl, useAtlas } from "./data";
 import { simpleAtlas } from "./simple";
+import { SolarCalculator } from "./SolarCalculator";
 import { hourLabel, num, pctChange, pctRange, range, signed, thousands, useStats, type Stats } from "./stats";
 import type { Atlas } from "./types";
 import "./atlas.css";
@@ -299,6 +300,7 @@ function Content({ atlas: rawAtlas, stats, mapRef }: { atlas: Atlas; stats: Stat
         </>}
         figure={<SolarChart c={ch.solar} href={table(ch.solar.source)} />}
         sure={{ level: "fair", why: <>This is a technical upper limit: it assumes panels on every usable roof, with shade from neighbouring buildings taken into account.</> }}
+        after={<SolarCalculator yieldKwhPerKwp={n.solar_yield} />}
       />
 
       <section className="card module" id="glossary" aria-labelledby="glossary-title">
