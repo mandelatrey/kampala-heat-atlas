@@ -42,7 +42,7 @@ python scripts/00_check_setup.py
 | Carry over earlier work (author's own repos) | `06` |
 | Land cover, change, building constraint | `07`, `07b`, `07c` |
 | Thermal classes · settlements · trees · solar | `08`, `09`/`09b`, `10`, `11` |
-| Figures · animations · atlas | `12`, `13`, `14` (map layers), `14c` (numbers and charts) |
+| Figures · animations · atlas | `12`, `13`, `14` (map layers), `14c` (numbers and charts); without the rasters, `14d` (map layers from the published images) |
 | Place names for the maps (OpenStreetMap; needs internet) | `14b` |
 | 3D model · 3D visuals · website | `15`, `16`, `17` |
 
@@ -70,6 +70,11 @@ The atlas draws everything from data rather than from pictures:
   `docs/atlas/tables/`, and the page links every chart to its table. On the author's machine it also refreshes two
   small tables from the data folder (hourly wind for the wind rose; persistent hot-spot area).
 - An `atlas.json` written before this change (layers as coloured PNGs) still displays, without values under the cursor.
+- **Without the analysis rasters** (they come from scripts 01–13 and live in `paths.data_root`, outside git),
+  `14_atlas.py` stops before changing anything. `python scripts/14d_layers_from_images.py` instead reads the published
+  layer images back into the same GeoTIFF format: categories exactly, continuous layers to one colour step (±0.03 °C
+  for surface heat), on the images' ~51 m cells rather than 30 m. Each caption says so. That is what `docs/atlas/` holds
+  now; run `14_atlas.py` where the rasters exist to replace it with full-resolution data.
 
 To preview a pipeline run before committing it, write it somewhere else and point the dev server at it:
 `KHA_DOCS=/path/to/docs npm run dev`.

@@ -30,12 +30,27 @@ from kampala.config import DATA
 from kampala.weblayers import class_layer, ramp_layer
 
 OUT = Path(sys.argv[1]) / "atlas"
+P = DATA / "processed"
+EP = config.load()["epochs"]; Y = [s["year"] for s in EP.values()]
+
+# check every input before touching docs/: a missing data folder must not cost the published layers
+NEEDED = [P / "m0" / "terrain_fabdem_30m.tif", P / "m2" / "hot_persistence_count_30m.tif", P / "m1" / "growth_frontier_10m.tif",
+          P / "m3" / f"settlement_groups_t3_{Y[2]}_90m.tif", P / "m4" / "tree_priority_classes_30m.tif",
+          P / "m5" / "rooftop_solar_buildings.parquet", DATA / "raw" / "overture_buildings.parquet"]
+NEEDED += [P / "m2" / f"thermal_classes_{ep}_{s['year']}_30m.tif" for ep, s in EP.items()]
+NEEDED += [P / "m2" / f"lst_landsat_t1_{Y[0]}_30m.tif", P / "m2" / f"lst_landsat_t3_{Y[2]}_30m.tif",
+           P / "m1" / f"landcover_t1_{Y[0]}_10m.tif", P / "m1" / f"landcover_t3_{Y[2]}_10m.tif"]
+missing = [f for f in NEEDED if not f.exists()]
+if missing:
+    sys.exit(f"14_atlas.py needs the analysis rasters in {DATA} (paths.data_root in config/config.yaml), made by "
+             f"scripts 01-13; {len(missing)} of {len(NEEDED)} are missing, e.g. {missing[0]}.\n"
+             "Nothing was changed. Without them, scripts/14d_layers_from_images.py turns the published layer images "
+             "in docs/atlas/layers/ into data layers instead.")
+
 # generated parts only: start them clean (no stale layers); stats.json and tables/ belong to 14c_atlas_stats.py
 for d in ("layers", "charts", "anims"):
     shutil.rmtree(OUT / d, ignore_errors=True)
 (OUT / "layers").mkdir(parents=True, exist_ok=True)
-P = DATA / "processed"
-EP = config.load()["epochs"]; Y = [s["year"] for s in EP.values()]
 
 with rasterio.open(P / "m0" / "terrain_fabdem_30m.tif") as r:
     H, W, T, CRS = r.height, r.width, r.transform, r.crs
