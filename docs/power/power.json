@@ -1,0 +1,15 @@
+{
+ "generated": "2026-11-19",
+ "log_rows": 0,
+ "radius_m": 500,
+ "near_logged_km": 1.0,
+ "areas": [],
+ "model": {
+  "chosen": "average",
+  "used": false,
+  "areas": 0,
+  "loo_mae_hours_week": {}
+ },
+ "estimates": [],
+ "planned": []
+}
