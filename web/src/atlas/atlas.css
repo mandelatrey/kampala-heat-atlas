@@ -213,3 +213,25 @@ details.how { border-top: 1px solid var(--line); padding-top: 10px; }
 details.how summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--ink-2); width: max-content; }
 details.how[open] summary { margin-bottom: 12px; }
 details.how .callout { margin-top: 12px; }
+
+/* years: play through a layer's years, or compare the earliest with the selected one across a divider */
+.timebar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid var(--line); }
+.timebar .play { width: 32px; height: 32px; border-radius: 10px; }
+.timebar .years { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.timebar .years button { border: 0; background: var(--surface); color: var(--ink-2); font: 500 12.5px var(--f-mono); padding: 7px 10px; cursor: pointer; }
+.timebar .years button + button { border-left: 1px solid var(--line); }
+.timebar .years button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.timebar button:disabled { opacity: .45; cursor: default; }
+.timebar .compare { padding: 6px 10px; font-size: 12.5px; border-radius: 10px; }
+.timebar .compare[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.timebar button:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.swipe { position: absolute; z-index: 450; top: 0; bottom: 0; width: 0; pointer-events: none; border-left: 2px solid #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / .3); transform: translateX(-1px); }
+.swipe-handle {
+  position: absolute; top: 50%; left: 0; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%;
+  display: grid; place-items: center; background: #fff; color: #14161a; font: 700 15px/1 var(--f-sans); letter-spacing: -.05em;
+  box-shadow: var(--shadow), 0 0 0 1px rgb(0 0 0 / .2); pointer-events: auto; cursor: ew-resize; touch-action: none; user-select: none;
+}
+.swipe-handle:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.swipe-tag { position: absolute; top: 92px; padding: 3px 8px; border-radius: 8px; background: rgb(20 22 26 / .82); color: #fff; font: 600 12px var(--f-mono); white-space: nowrap; }
+.swipe-tag.left { right: 8px; }
+.swipe-tag.right { left: 8px; }

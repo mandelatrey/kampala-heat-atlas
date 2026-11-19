@@ -1,7 +1,7 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 // MapLibre finds its worker next to its own file, which Vite moves; build the worker and say where it is
 import mapWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
-import type { Map as MlMap, MapMouseEvent, Popup, StyleSpecification } from "maplibre-gl";
+import type { ImageSource, Map as MlMap, MapMouseEvent, Popup, StyleSpecification } from "maplibre-gl";
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../components/ui";
 import { useIsDark } from "../theme";
@@ -10,6 +10,7 @@ import { formatLatLon, gridGeo } from "./geo";
 import { PlaceCard, PlaceSearch, type Focus } from "./PlaceCard";
 import { nearest, usePlaces, type Place } from "./places";
 import { describe, getRaster, paint, valueAt, type Raster } from "./raster";
+import { splitImage, yearSeries } from "./series";
 import { cellsWithin, summarise, SUMMARY_LAYERS, type AreaSummary, type Loaded, type SummaryLayerId } from "./summary";
 import type { Atlas, AtlasLayer } from "./types";
 
@@ -57,27 +58,27 @@ function Legend({ layer }: { layer: AtlasLayer }) {
   );
 }
 
-// each data layer is painted once per visit and kept as an image URL
-const painted = new Map<string, Promise<string>>();
+// painted layers, the few most recent kept (the year controls flip between them; each is ~4 MB of pixels)
+const painted = new Map<string, ImageData>();
+const KEEP_PAINTED = 4;
 
-function layerImage(layer: AtlasLayer, r: Raster): Promise<string> {
-  let p = painted.get(layer.id);
-  if (!p) {
-    p = (async () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = r.width;
-      canvas.height = r.height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx || !layer.values) throw new Error("no canvas");
-      ctx.putImageData(new ImageData(paint(r, layer.values, layer.style), r.width, r.height), 0, 0);
-      const blob = await new Promise<Blob | null>((ok) => canvas.toBlob(ok));
-      if (!blob) throw new Error("could not draw the layer");
-      return URL.createObjectURL(blob);
-    })();
-    p.catch(() => painted.delete(layer.id));
-    painted.set(layer.id, p);
+function layerPixels(layer: AtlasLayer, r: Raster): ImageData {
+  let px = painted.get(layer.id);
+  if (px) painted.delete(layer.id);              // re-inserted below as the most recent
+  else {
+    if (!layer.values) throw new Error(`${layer.id} has no values to paint`);
+    px = new ImageData(paint(r, layer.values, layer.style), r.width, r.height);
   }
-  return p;
+  painted.set(layer.id, px);
+  while (painted.size > KEEP_PAINTED) painted.delete(painted.keys().next().value!);
+  return px;
+}
+
+/** A layer as drawn, with the data behind it (for reading values under the cursor). */
+interface Shown {
+  layer: AtlasLayer;
+  raster: Raster;
+  image: ImageData;
 }
 
 /**
@@ -102,6 +103,24 @@ function strengthenLabels(m: MlMap, dark: boolean) {
     m.setPaintProperty(l.id, "text-halo-color", "rgba(10, 11, 13, 0.9)");
     m.setPaintProperty(l.id, "text-halo-width", 1.6);
   }
+}
+
+/**
+ * Put a picture in the data layer: swap the image in place when the layer exists (no flash between years),
+ * otherwise add it under the focus circle and the labels.
+ */
+function showData(m: MlMap, corners: ImageSource["coordinates"], src: { image: ImageData } | { url: string }, opacity: number) {
+  const existing = m.getSource(DATA) as ImageSource | undefined;
+  if (existing) {
+    existing.updateImage({ ...src, coordinates: corners });
+    return;
+  }
+  m.addSource(DATA, { type: "image", coordinates: corners, ...("url" in src ? { url: src.url } : {}) });
+  if ("image" in src) (m.getSource(DATA) as ImageSource).updateImage({ image: src.image });
+  m.addLayer({
+    id: DATA, type: "raster", source: DATA,
+    paint: { "raster-opacity": opacity, "raster-resampling": "nearest", "raster-fade-duration": 0 },
+  }, m.getLayer(`${FOCUS}-fill`) ? `${FOCUS}-fill` : aboveBasemap(m));
 }
 
 function removeLayer(m: MlMap, id: string) {
@@ -132,11 +151,25 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
   const map = useRef<MlMap | null>(null);
   const ml = useRef<MapLibre | null>(null);
   const popup = useRef<Popup | null>(null);
-  const shown = useRef<{ layer: AtlasLayer; raster: Raster } | null>(null);   // the data under the cursor
+  const shown = useRef<Shown | null>(null);           // the selected layer as drawn
+  const sides = useRef<{ left: Shown; right: Shown } | null>(null);   // comparing: earliest year | selected year
+  const splitCol = useRef<number | null>(null);        // comparing: the grid column under the divider
   const dark = useIsDark();
   const darkNow = useRef(dark);
   const [h, w] = atlas.size;
   const layer = atlas.layers.find((l) => l.id === layerId) ?? atlas.layers[0];
+  // years: the selected layer's other years, playing through them, and comparing the earliest with it
+  const series = useMemo(() => (layer ? yearSeries(atlas.layers, layer.id) : null), [atlas.layers, layer]);
+  const [playing, setPlaying] = useState(false);
+  const [compare, setCompare] = useState(false);
+  const [split, setSplit] = useState(50);              // divider position, % of the map's width
+  const first = series?.[0];
+  const before = compare && first && layer && first.layer.id !== layer.id ? first : null;
+  const comparing = before !== null;
+  const opacityNow = useRef(opacity);
+  opacityNow.current = opacity;
+  const splitNow = useRef(split);
+  splitNow.current = split;
   const geo = useMemo(() => gridGeo(atlas.grid, h, w), [atlas.grid, h, w]);
   const placesLoad = usePlaces();
   const places: Place[] = placesLoad.state === "ready" ? placesLoad.data.places : [];
@@ -229,41 +262,124 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
     return () => removeLayer(m, RELIEF);
   }, [relief, styleGen, atlas.base, geo]);
 
-  // the selected layer: drawn from its data, or the older ready-coloured image
+  // the selected layer (with the earliest year beside it when comparing): drawn from its data, or the older
+  // ready-coloured image; swapped in place, so stepping through the years does not flash
   useEffect(() => {
     const m = map.current;
     if (!m || !styleGen || !layer) return;
     let live = true;
     shown.current = null;
+    sides.current = null;
     popup.current?.remove();
-    const place = (url: string) => {
-      if (!live || !m.style) return;
-      m.addSource(DATA, { type: "image", url, coordinates: geo.corners });
-      m.addLayer({
-        id: DATA, type: "raster", source: DATA,
-        paint: { "raster-opacity": opacity, "raster-resampling": "nearest", "raster-fade-duration": 0 },
-      }, m.getLayer(`${FOCUS}-fill`) ? `${FOCUS}-fill` : aboveBasemap(m));
-    };
     setStatus({ state: "loading" });
-    if (layer.values) {
-      getRaster(atlasUrl(layer.src))
-        .then(async (raster) => {
-          const url = await layerImage(layer, raster);
-          if (!live) return;
-          place(url);
-          shown.current = { layer, raster };
-          setStatus({ state: "idle" });
-        })
-        .catch((err: unknown) => live && setStatus({ state: "error", message: err instanceof Error ? err.message : String(err) }));
-    } else {
-      place(new URL(atlasUrl(layer.src), location.href).href);
+    if (!layer.values) {
+      showData(m, geo.corners, { url: new URL(atlasUrl(layer.src), location.href).href }, opacityNow.current);
       setStatus({ state: "idle" });
+      return () => {
+        live = false;
+      };
     }
+    const wanted = before?.layer.values ? [before.layer, layer] : [layer];
+    Promise.all(wanted.map((l) => getRaster(atlasUrl(l.src)).then((raster): Shown => ({ layer: l, raster, image: layerPixels(l, raster) }))))
+      .then((drawn) => {
+        if (!live || !m.style) return;
+        const right = drawn[drawn.length - 1]!;
+        shown.current = right;
+        if (drawn.length === 2) {
+          sides.current = { left: drawn[0]!, right };
+          redraw.current();
+        } else {
+          showData(m, geo.corners, { image: right.image }, opacityNow.current);
+        }
+        setStatus({ state: "idle" });
+      })
+      .catch((err: unknown) => {
+        if (!live) return;
+        removeLayer(m, DATA);                    // do not leave the previous layer up under this one's name
+        setStatus({ state: "error", message: err instanceof Error ? err.message : String(err) });
+      });
     return () => {
       live = false;
-      removeLayer(m, DATA);
     };
-  }, [layer, styleGen, geo]); // not on opacity: the effect below changes it without redrawing
+  }, [layer, before?.layer, styleGen, geo]); // not on opacity (set below without redrawing); `before` by its layer
+
+  // comparing: the earliest year left of the divider, the selected year right of it; redrawn as the divider
+  // moves and as the map pans (the divider stays put on screen), at most once a frame
+  const frame = useRef(0);
+  const redraw = useRef(() => {});
+  redraw.current = () => {
+    if (frame.current) return;
+    frame.current = requestAnimationFrame(() => {
+      frame.current = 0;
+      const m = map.current, s = sides.current, el = mapEl.current;
+      if (!m?.style || !s || !el) return;
+      const { lng, lat } = m.unproject([(splitNow.current / 100) * el.clientWidth, el.clientHeight / 2]);
+      const col = geo.cellAt(lat, lng)[1];
+      splitCol.current = col;
+      const { width, height } = s.right.image;
+      const out = new Uint8ClampedArray(new ArrayBuffer(width * height * 4));
+      splitImage(s.left.image.data, s.right.image.data, width, height, col, out);
+      showData(m, geo.corners, { image: new ImageData(out, width, height) }, opacityNow.current);
+    });
+  };
+  useEffect(() => {
+    if (comparing) redraw.current();
+    else splitCol.current = null;
+  }, [split, comparing]);
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready || !comparing) return;
+    const move = () => redraw.current();
+    m.on("move", move);
+    return () => {
+      m.off("move", move);
+    };
+  }, [ready, comparing]);
+
+  // playing: show each year for a moment once it has loaded, and stop on the latest
+  useEffect(() => {
+    if (!playing || !series || status.state !== "idle") return;
+    const i = series.findIndex((x) => x.layer.id === layer?.id);
+    if (i < 0 || i >= series.length - 1) {
+      setPlaying(false);
+      return;
+    }
+    const t = window.setTimeout(() => onLayer(series[i + 1]!.layer.id), 1400);
+    return () => window.clearTimeout(t);
+  }, [playing, series, status, layer, onLayer]);
+  useEffect(() => {
+    if (!series) {
+      setPlaying(false);
+      setCompare(false);
+    }
+  }, [series]);
+
+  const togglePlay = () => {
+    if (!series) return;
+    if (playing) return setPlaying(false);
+    for (const x of series) if (x.layer.values) void getRaster(atlasUrl(x.layer.src)).catch(() => {});   // fetch ahead
+    setCompare(false);
+    if (series[series.length - 1]!.layer.id === layer?.id) onLayer(series[0]!.layer.id);
+    setPlaying(true);
+  };
+  const toggleCompare = () => {
+    if (!series) return;
+    setPlaying(false);
+    if (comparing) return setCompare(false);
+    if (series[0]!.layer.id === layer?.id) onLayer(series[series.length - 1]!.layer.id);   // earliest vs latest
+    setCompare(true);
+  };
+  const dragSplit = (e: React.PointerEvent<HTMLElement>) => {
+    const rect = mapEl.current?.getBoundingClientRect();
+    if (rect) setSplit(Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100)));
+  };
+  const keySplit = (e: React.KeyboardEvent<HTMLElement>) => {
+    const step = e.shiftKey ? 10 : 2;
+    const next = e.key === "ArrowLeft" ? split - step : e.key === "ArrowRight" ? split + step : e.key === "Home" ? 0 : e.key === "End" ? 100 : null;
+    if (next === null) return;
+    e.preventDefault();
+    setSplit(Math.max(0, Math.min(100, next)));
+  };
 
   useEffect(() => {
     const m = map.current;
@@ -337,25 +453,31 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
     const m = map.current;
     const lib = ml.current;
     if (!m || !lib) return;
+    // the layer drawn at a grid column: when comparing, the side of the divider it is on
+    const under = (col: number): Shown | null => {
+      const two = sides.current, at = splitCol.current;
+      return two && at !== null ? (col < at ? two.left : two.right) : shown.current;
+    };
     const read = (lat: number, lon: number) => {
       const [row, col] = geo.cellAt(lat, lon);
       const inside = row >= 0 && col >= 0 && row < h && col < w;
-      const s = shown.current;
+      const s = under(col);
       const text = inside && s?.layer.values ? describe(s.layer, valueAt(s.raster, s.layer.values, row, col)) : null;
       const near = nearest(places, lat, lon);
-      return { inside, text, near: near ? `${near.km < 0.5 ? "in" : "near"} ${near.place.name}` : null };
+      return { inside, text, layer: s?.layer ?? null, near: near ? `${near.km < 0.5 ? "in" : "near"} ${near.place.name}` : null };
     };
     const move = (e: MapMouseEvent) => {
       const { lat, lng } = e.lngLat;
       const r = read(lat, lng);
-      setCursor([r.text, r.near, formatLatLon(lat, lng)].filter(Boolean).join(" · "));
+      const label = sides.current && r.text && r.layer ? `${r.layer.label}: ${r.text}` : r.text;
+      setCursor([label, r.near, formatLatLon(lat, lng)].filter(Boolean).join(" · "));
     };
     const out = () => setCursor(null);
     const click = (e: MapMouseEvent) => {
-      const s = shown.current;
-      if (!s) return;
       const { lat, lng } = e.lngLat;
       const r = read(lat, lng);
+      const s = r.layer ? { layer: r.layer } : shown.current;
+      if (!s) return;
       const box = document.createElement("div");      // text nodes only: names come from OpenStreetMap
       box.className = "readout";
       const head = document.createElement("span");
@@ -413,11 +535,55 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
       </div>
       <div className="mapcol">
         <div className="mapwrap">
-          <div className="map" ref={mapEl} role="img" aria-label={`Street map of Kampala showing ${layer?.label ?? ""}`} />
+          <div className="map" ref={mapEl} role="img"
+            aria-label={before ? `Street map of Kampala comparing ${before.layer.label} (left) with ${layer?.label ?? ""} (right)` : `Street map of Kampala showing ${layer?.label ?? ""}`} />
+          {before && (
+            <div className="swipe" style={{ left: `${split}%` }}>
+              <span className="swipe-tag left" aria-hidden="true">{before.year}</span>
+              <span className="swipe-tag right" aria-hidden="true">{series?.find((x) => x.layer.id === layer?.id)?.year}</span>
+              <div
+                className="swipe-handle" role="slider" tabIndex={0}
+                aria-label={`Divider: ${before.year} on the left, ${layer?.label ?? ""} on the right`}
+                aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(split)}
+                aria-valuetext={`${Math.round(split)} % from the left`}
+                onPointerDown={(e) => {
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                  dragSplit(e);
+                }}
+                onPointerMove={(e) => e.currentTarget.hasPointerCapture(e.pointerId) && dragSplit(e)}
+                onKeyDown={keySplit}
+              >
+                <span aria-hidden="true">‹ ›</span>
+              </div>
+            </div>
+          )}
           {layer && (
-            <div className="float legend" aria-live="polite">
-              <span className="eyebrow"><Icon.layers size={13} /> {layer.label}</span>
+            <div className="float legend">
+              <span className="eyebrow" aria-live="polite"><Icon.layers size={13} /> {before ? `${before.year} | ${layer.label}` : layer.label}</span>
               <Legend layer={layer} />
+              {series && (
+                <div className="timebar">
+                  <button type="button" className="iconbtn play" onClick={togglePlay} disabled={comparing}
+                    aria-label={playing ? "Pause" : `Play through ${series.map((x) => x.year).join(", ")}`} title={playing ? "Pause" : "Play through the years"}>
+                    {playing ? <Icon.pause /> : <Icon.play />}
+                  </button>
+                  <div className="years" role="group" aria-label="Year">
+                    {series.map((x) => (
+                      <button key={x.layer.id} type="button" aria-pressed={x.layer.id === layer.id}
+                        disabled={comparing && x === first}
+                        onClick={() => {
+                          setPlaying(false);
+                          onLayer(x.layer.id);
+                        }}>
+                        {x.year}
+                      </button>
+                    ))}
+                  </div>
+                  <button type="button" className="btn compare" aria-pressed={comparing} onClick={toggleCompare}>
+                    {comparing ? "Stop comparing" : `Compare with ${first?.year}`}
+                  </button>
+                </div>
+              )}
             </div>
           )}
           <div className="float opacity">
