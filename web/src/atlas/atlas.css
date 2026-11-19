@@ -188,6 +188,7 @@ ul.find li::marker { color: var(--accent); }
 .fact-line { display: grid; gap: 2px; padding-left: 10px; border-left: 3px solid var(--line-strong); }
 .fact-line.t-hot { border-left-color: var(--hot); }
 .fact-line.t-cool { border-left-color: var(--cool); }
+.fact-line.t-warn { border-left-color: var(--warning); }
 .fact-line dt { font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
 .fact-line dd { margin: 0; font-size: 14px; line-height: 1.45; color: var(--ink); }
 .place-card .fine { margin: 0; font-size: 12px; }
@@ -271,3 +272,6 @@ details.how .callout { margin-top: 12px; }
   .calc-tiles > div { grid-template-columns: auto 1fr; align-items: baseline; gap: 4px 10px; }
   .calc-tiles > div span:last-child { grid-column: 1 / -1; }
 }
+.calc-where .map-search { padding: 0; border: 0; background: none; grid-column: auto; display: grid; gap: 6px; }
+.calc-where .search-row { flex: none; max-width: none; }
+.calc-where .search-box input { padding: 8px 0; font-size: 14px; }

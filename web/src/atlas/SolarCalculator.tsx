@@ -1,6 +1,9 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { getJson, useLoad } from "../data";
+import { cutsAt, cutsSentence, usePower, type PowerData } from "../power/cuts";
 import { monthlyBill, PRICES, solarResult, suggestedKwp, unitsForBill, type Building, type Tariffs } from "../power/solar";
+import { PlaceSearch } from "./PlaceCard";
+import { usePlaces } from "./places";
 
 /** "UGX 93,524", rounded to the thousand from 100,000 up. */
 const ugx = (v: number) => `UGX ${(v >= 100000 ? Math.round(v / 1000) * 1000 : Math.round(v)).toLocaleString("en-GB")}`;
@@ -38,6 +41,11 @@ function Calculator({ t, yieldKwhPerKwp }: { t: Tariffs; yieldKwhPerKwp: number 
   const [battery, setBattery] = useState(0);
   const [cuts, setCuts] = useState(0);
   const [generator, setGenerator] = useState(false);
+  const [cutsFrom, setCutsFrom] = useState<string | null>(null);     // what the power-cut log said for a chosen place
+  const powerLoad = usePower();
+  const power: PowerData | null = powerLoad.state === "ready" ? powerLoad.data : null;
+  const placesLoad = usePlaces();
+  const places = placesLoad.state === "ready" ? placesLoad.data.places : [];
   const [panelPrice, setPanelPrice] = useState<number | null>(null);
   const [batteryPrice, setBatteryPrice] = useState(PRICES.batteryPerKwh);
 
@@ -97,8 +105,22 @@ function Calculator({ t, yieldKwhPerKwp }: { t: Tariffs; yieldKwhPerKwp: number 
           <Field label="Battery" value={battery === 0 ? "none" : `${battery} kWh`}>
             <input type="range" min={0} max={who === "home" ? 15 : 60} step={0.5} value={battery} onChange={(e) => setBattery(Number(e.target.value))} />
           </Field>
-          <Field label="Power cuts" value={cuts === 0 ? "none" : `${cuts} hours a week`}>
-            <input type="range" min={0} max={70} step={1} value={cuts} onChange={(e) => setCuts(Number(e.target.value))} />
+          {power && power.areas.length > 0 && places.length > 0 && (
+            <div className="calc-where">
+              <PlaceSearch places={places} title="Where is the building?" hint="Fills in power cuts from the atlas's power-cut log"
+                onPick={(f) => {
+                  const c = cutsAt(power, f);
+                  const hours = c.kind === "logged" && c.area.rate === "diary" ? c.area.hours_week : c.kind === "estimate" ? c.hoursWeek : null;
+                  if (hours !== null) setCuts(Math.min(70, Math.round(hours)));
+                  setCutsFrom(cutsSentence(c).text);
+                }} />
+            </div>
+          )}
+          <Field label="Power cuts" value={cuts === 0 ? "none" : `${cuts} hours a week`} hint={cutsFrom ?? undefined}>
+            <input type="range" min={0} max={70} step={1} value={cuts} onChange={(e) => {
+              setCuts(Number(e.target.value));
+              setCutsFrom(null);
+            }} />
           </Field>
           <label className="toggle"><input type="checkbox" checked={generator} onChange={(e) => setGenerator(e.target.checked)} /> We run a generator during cuts</label>
           <details className="calc-prices">
