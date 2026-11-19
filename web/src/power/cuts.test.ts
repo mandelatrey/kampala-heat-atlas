@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cutsAt, cutsSentence, daysAWeek, hoursAt, kampalaToday, plannedNear, plannedSentence, type LoggedArea, type PowerData } from "./cuts";
+import { cutsAt, cutsSentence, daysAWeek, eveningShare, hoursAt, kampalaToday, plannedNear, plannedSentence, publishedNear, publishedSentence, type LoggedArea, type PowerData } from "./cuts";
 
 // Made-up power data for the tests only.
 const area = (name: string, lat: number, lon: number, extra: Partial<LoggedArea> = {}): LoggedArea => ({
@@ -43,9 +43,9 @@ describe("power cuts at a point", () => {
   it("says so when a watched area had no reported cuts", () => {
     expect(cutsSentence(cutsAt(data, { lat: 0.3, lon: 32.62 })).text).toBe("No cuts reported in Quiet over the 14 days it was watched (Sun 1 Nov to Sat 14 Nov; from X complaint to UEDCL).");
   });
-  it("does not turn reports without a watching period into a weekly rate", () => {
-    const c = cutsAt(data, { lat: 0.4, lon: 32.6 });
-    expect(cutsSentence(c).text).toMatch(/not a weekly rate/);
+  it("does not turn reports without a watching period into a rate, and gives years for long spans", () => {
+    const c = cutsAt({ ...data, areas: [area("Beta", 0.4, 32.6, { basis: "reports only", first: "2019-11-29", last: "2024-08-06", cut_days: 8 })] }, { lat: 0.4, lon: 32.6 });
+    expect(cutsSentence(c).text).toBe("Cuts reported in Beta on 8 days (Nov 2019 to Aug 2024). These are reports someone found, not every cut in that time, so they do not say how often the power goes off.");
     expect(hoursAt(data, c)).toBeNull();
   });
   it("uses the model's estimate nearby, with its held-out error", () => {
@@ -70,5 +70,25 @@ describe("planned cuts", () => {
   });
   it("knows the date in Kampala (UTC+3)", () => {
     expect(kampalaToday(new Date("2026-11-19T22:30:00Z"))).toBe("2026-11-20");
+  });
+});
+
+describe("published figures and timing", () => {
+  const withNews: PowerData = {
+    ...data,
+    published: [{ areas: ["Najjera", "Kiwatule", "Kigowa", "Buwate"], lat: 0.387, lon: 32.625, from: "2019-08-01", to: "2019-10-31",
+      cuts_per_month: 13, qualifier: "up to", source: "CEO East Africa, 27 Nov 2019", url: "https://example.org/a", note: "" }],
+    reported_hours: [2, 1, 0, 0, 0, 1, 0, 0, 3, 3, 4, 0, 0, 0, 1, 0, 1, 1, 3, 5, 4, 3, 1, 1],
+  };
+  it("quotes a news figure for places within 3 km", () => {
+    const p = publishedNear(withNews, { lat: 0.373, lon: 32.63 });
+    expect(p).toHaveLength(1);
+    expect(publishedSentence(p[0]!)).toBe("Up to 13 cuts a month in Najjera, Kiwatule, Kigowa and Buwate, Aug 2019 to Oct 2019 (CEO East Africa, 27 Nov 2019).");
+    expect(publishedNear(withNews, { lat: 0.23, lon: 32.55 })).toEqual([]);
+  });
+  it("gives the evening share only with enough timed reports", () => {
+    expect(eveningShare(withNews)).toEqual({ n: 34, evening: 17 / 34 });
+    expect(eveningShare({ ...withNews, reported_hours: [1, 2] })).toBeNull();
+    expect(eveningShare(data)).toBeNull();
   });
 });

@@ -135,3 +135,16 @@ def test_leaves_out_unsampled_and_short_areas():
     y = [0.5 * i for i in range(10)]
     assert P.choose_model(_areas(y, coords, basis="reports only")).n == 0
     assert P.choose_model(_areas(y, coords, days=5)).n == 0
+
+
+def test_complaint_times_and_published_figures(tmp_path):
+    header = "area,lat,lon,date,hours_off,cuts,kind,start,end,reported,source,notes\n"
+    rows = P.read_log(write(tmp_path, "log2.csv", header, "A,0.3,32.5,2026-11-01,,,,,,20:15,X complaint,\nA,0.3,32.5,2026-11-02,0,,,,,09:00,X complaint,power was on\nA,0.3,32.5,2026-11-03,,,,,,07:05,,\n"))
+    h = P.reported_hours(rows)
+    assert (h[20], h[7], h[9], sum(h)) == (1, 1, 0, 2)          # a power-on day is not a cut
+    with pytest.raises(ValueError, match="HH:MM"):
+        P.read_log(write(tmp_path, "log3.csv", header, "A,0.3,32.5,2026-11-01,,,,,,8pm,,\n"))
+    pub = write(tmp_path, "published.csv", "areas,lat,lon,from,to,cuts_per_month,qualifier,source,url,note\n",
+                "Nowhere;Alpha,,,2019-08-01,2019-10-31,13,up to,A newspaper,https://example.org,\n")
+    (p,) = P.read_published(pub, [{"name": "Alpha", "rank": 4, "lat": 0.38, "lon": 32.62}])
+    assert (p["areas"], p["lat"], p["cuts_per_month"], p["qualifier"]) == (["Nowhere", "Alpha"], 0.38, 13.0, "up to")

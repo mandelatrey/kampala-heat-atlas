@@ -19,6 +19,7 @@ after editing either:
 | `cuts` | separate cuts that day (optional) | `2` |
 | `kind` | `planned`, `unplanned` or `unknown` | `unplanned` |
 | `start`, `end` | optional `HH:MM`, e.g. a planned cut's announced window | `07:00`, `18:00` |
+| `reported` | optional `HH:MM` (24-hour): when the cut was reported, e.g. the complaint's time. Used for when in the day cuts happen | `20:03` |
 | `source` | a plain label for where it came from | `X complaint to UEDCL`, `UEDCL notice` |
 | `notes` | anything else (not published) | `whole of Mbogo road` |
 
@@ -41,6 +42,19 @@ that.
 
 An area with reports but no sampling period is shown as "reports only" (its first to last report would overstate the
 rate) and kept out of the model.
+
+## published.csv
+
+Figures from news and reports, shown near the areas they name: `areas` (names separated by `;`), `lat`, `lon`
+(optional), `from`, `to`, `cuts_per_month`, `qualifier` (e.g. `up to`), `source`, `url`, `note`.
+
+## Complaints found by searching are reports, not a sample
+
+Ten complaints for an area spread over several years are what a search turned up, not every cut in those years, so
+the days between them are not days with power. Leave such rows without a sampling period: the atlas shows them as
+reports and uses their times, but never as a rate. For a rate, pick one recent period (say the last four weeks), and for
+each area record **every** complaint in it (X search: `UEDCL Najjera since:2026-10-22 until:2026-11-19`), then add that
+period to `sampling.csv` for every area searched, including the quiet ones.
 
 ## How the estimates work
 

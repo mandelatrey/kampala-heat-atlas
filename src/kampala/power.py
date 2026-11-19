@@ -10,6 +10,7 @@ The log (config/power/outage_log.csv) has one row per reported cut (several repo
   cuts       separate cuts that day (optional)
   kind       planned | unplanned | unknown
   start, end optional HH:MM, e.g. a planned cut's announced window
+  reported   optional HH:MM: when the cut was reported (e.g. the complaint's time), for when in the day cuts happen
   source     a plain label: "X complaint to UEDCL", "UEDCL notice", "resident diary". Labels that look like a link or
              an @handle are not published
   notes      free text, not published. No personal names, handles or phone numbers: the repository is public
@@ -33,7 +34,8 @@ from pathlib import Path
 
 import numpy as np
 
-COLUMNS = ["area", "lat", "lon", "date", "hours_off", "cuts", "kind", "start", "end", "source", "notes"]
+COLUMNS = ["area", "lat", "lon", "date", "hours_off", "cuts", "kind", "start", "end", "reported", "source", "notes"]
+PUBLISHED_COLUMNS = ["areas", "lat", "lon", "from", "to", "cuts_per_month", "qualifier", "source", "url", "note"]
 SAMPLING_COLUMNS = ["area", "lat", "lon", "from", "to", "source"]
 KINDS = {"planned", "unplanned", "unknown"}
 CBD = (0.3136, 32.5811)              # Kampala's centre (OpenStreetMap's city node)
@@ -55,6 +57,7 @@ class Row:
     start: str
     end: str
     source: str
+    reported: str = ""
 
 
 @dataclass
@@ -145,10 +148,44 @@ def read_log(path: Path) -> list[Row]:
         if kind not in KINDS:
             raise ValueError(f"line {line}: kind '{kind}' should be one of {', '.join(sorted(KINDS))}")
         cuts = _num(r.get("cuts", ""), "cuts", line)
+        reported = (r.get("reported") or "").strip()
+        if reported and not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", reported):
+            raise ValueError(f"line {line}: reported '{reported}' should be HH:MM (24-hour)")
         rows.append(Row(area, _num(r.get("lat", ""), "lat", line), _num(r.get("lon", ""), "lon", line), day, hours,
                         None if cuts is None else int(cuts), kind, (r.get("start") or "").strip(), (r.get("end") or "").strip(),
-                        (r.get("source") or "").strip()))
+                        (r.get("source") or "").strip(), reported))
     return rows
+
+
+def reported_hours(rows: list[Row]) -> list[int]:
+    """How many reported cuts (not planned ones, not power-on days) were reported in each hour of the day."""
+    out = [0] * 24
+    for r in rows:
+        if r.reported and r.kind != "planned" and r.hours_off != 0:
+            out[int(r.reported[:2])] += 1
+    return out
+
+
+def read_published(path: Path, places: list[dict]) -> list[dict]:
+    """Published figures (news, reports): a rate for named areas over a period, placed at the first area's location."""
+    by_name = {}
+    for p in sorted(places, key=lambda p: p.get("rank", 9)):
+        by_name.setdefault(p["name"].casefold(), p)
+    out = []
+    for line, r in _rows(path, ("areas", "from", "to", "cuts_per_month", "source"), PUBLISHED_COLUMNS):
+        names = [a.strip() for a in (r.get("areas") or "").split(";") if a.strip()]
+        lat, lon = _num(r.get("lat", ""), "lat", line), _num(r.get("lon", ""), "lon", line)
+        if lat is None or lon is None:
+            hit = next((by_name[n.casefold()] for n in names if n.casefold() in by_name), None)
+            if not hit:
+                raise ValueError(f"line {line}: none of {names} is in places.json; give lat and lon")
+            lat, lon = hit["lat"], hit["lon"]
+        rate = _num(r.get("cuts_per_month", ""), "cuts_per_month", line)
+        out.append(dict(areas=names, lat=lat, lon=lon, **{"from": _day(r.get("from", ""), "from", line).isoformat()},
+                        to=_day(r.get("to", ""), "to", line).isoformat(), cuts_per_month=rate,
+                        qualifier=(r.get("qualifier") or "").strip(), source=(r.get("source") or "").strip(),
+                        url=(r.get("url") or "").strip(), note=(r.get("note") or "").strip()))
+    return out
 
 
 def read_sampling(path: Path) -> list[Window]:

@@ -29,11 +29,29 @@ export interface PowerData {
   model: { chosen: string; used: boolean; areas: number; loo_mae_cut_days_week: Record<string, number> };
   estimates: { name: string; lat: number; lon: number; cut_days_week: number }[];
   planned: { area: string; lat: number; lon: number; date: string; start: string; end: string; hours: number | null; source: string }[];
+  /** Reported cuts by the hour they were reported, 0-23 (older files lack it). */
+  reported_hours?: number[];
+  /** Figures from news and reports: a cut rate for named areas over a period (older files lack it). */
+  published?: Published[];
+}
+
+export interface Published {
+  areas: string[];
+  lat: number;
+  lon: number;
+  from: string;
+  to: string;
+  cuts_per_month: number;
+  /** e.g. "up to" */
+  qualifier: string;
+  source: string;
+  url: string;
+  note: string;
 }
 
 /** The power data, or null when there is none yet (the atlas then says nothing about power cuts). */
 export function usePower(): Load<PowerData | null> {
-  return useLoad("power", () => getJson<PowerData>("power/power.json").then((d) => (d.areas.length || d.planned.length ? d : null), () => null));
+  return useLoad("power", () => getJson<PowerData>("power/power.json").then((d) => (d.areas.length || d.planned.length || d.published?.length ? d : null), () => null));
 }
 
 export function km(a: { lat: number; lon: number }, b: { lat: number; lon: number }): number {
@@ -93,6 +111,12 @@ export function kampalaToday(now = new Date()): string {
 }
 
 const day = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+const monthYear = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" });
+/** "Sun 1 Nov to Sat 14 Nov", with years when the period is not all in one recent year. */
+const span = (a: string, b: string, now = new Date()) => {
+  if (a.slice(0, 4) === b.slice(0, 4) && a.slice(0, 4) === String(now.getUTCFullYear())) return `${day(a)} to ${day(b)}`;
+  return a.slice(0, 7) === b.slice(0, 7) ? `${day(a)} to ${day(b)} ${a.slice(0, 4)}` : `${monthYear(a)} to ${monthYear(b)}`;
+};
 
 /** "about 3 days a week", "about one day every 2 weeks". */
 export function daysAWeek(d: number): string {
@@ -111,13 +135,13 @@ export function cutsSentence(c: CutsHere): { text: string; tone: "hot" | "neutra
     const a = c.area;
     const where = c.km < 0.5 ? a.name : `${a.name} (${c.km.toFixed(1)} km away)`;
     if (a.basis === "reports only") {
-      return { text: `Cuts reported in ${where} on ${a.cut_days} day${a.cut_days === 1 ? "" : "s"} between ${day(a.first)} and ${day(a.last)}. No watching period is recorded for this area, so this is not a weekly rate.`, tone: "neutral" };
+      return { text: `Cuts reported in ${where} on ${a.cut_days} day${a.cut_days === 1 ? "" : "s"} (${span(a.first, a.last)}). These are reports someone found, not every cut in that time, so they do not say how often the power goes off.`, tone: "neutral" };
     }
     const from = a.sources.length ? `; from ${a.sources.join(", ")}` : "";
-    if (a.cut_days === 0) return { text: `No cuts reported in ${where} over the ${a.days} days it was watched (${day(a.first)} to ${day(a.last)}${from}).`, tone: "neutral" };
+    if (a.cut_days === 0) return { text: `No cuts reported in ${where} over the ${a.days} days it was watched (${span(a.first, a.last)}${from}).`, tone: "neutral" };
     const hours = a.hours_week === null ? "" : ` About ${Math.round(a.hours_week)} hours a week in all.`;
     return {
-      text: `Power went off ${daysAWeek(a.cut_days_week)} in ${where}: cuts reported on ${a.cut_days} of ${a.days} days watched (${day(a.first)} to ${day(a.last)}${from}).${hours} Only reported cuts count, so the real figure may be higher.`,
+      text: `Power went off ${daysAWeek(a.cut_days_week)} in ${where}: cuts reported on ${a.cut_days} of ${a.days} days watched (${span(a.first, a.last)}${from}).${hours} Only reported cuts count, so the real figure may be higher.`,
       tone: a.cut_days_week >= 2 ? "hot" : "neutral",
     };
   }
@@ -140,4 +164,23 @@ export function cutsSentence(c: CutsHere): { text: string; tone: "hot" | "neutra
 export function plannedSentence(p: PowerData["planned"][number]): string {
   const when = p.start && p.end ? `, ${p.start}–${p.end}` : p.hours ? `, about ${p.hours} hours` : "";
   return `Planned cut ${day(p.date)}${when}, in ${p.area}${p.source ? ` (${p.source})` : ""}.`;
+}
+
+/** Published figures for areas within `withinKm`. */
+export function publishedNear(d: PowerData, at: { lat: number; lon: number }, withinKm = 3): Published[] {
+  return (d.published ?? []).filter((p) => km(p, at) <= withinKm);
+}
+
+/** "Up to 13 cuts a month in Najjera, Kiwatule, Kigowa and Buwate in Aug to Oct 2019 (CEO East Africa, ...)." */
+export function publishedSentence(p: Published): string {
+  const names = p.areas.length > 1 ? `${p.areas.slice(0, -1).join(", ")} and ${p.areas[p.areas.length - 1]}` : p.areas[0] ?? "this area";
+  const lead = `${p.qualifier ? `${p.qualifier[0]!.toUpperCase()}${p.qualifier.slice(1)} ` : ""}${p.cuts_per_month} cuts a month`;
+  return `${lead} in ${names}, ${span(p.from, p.to)} (${p.source}).`;
+}
+
+/** When reported cuts were reported: the share between 6 pm and midnight, once there are enough with a time. */
+export function eveningShare(d: PowerData, min = 20): { n: number; evening: number } | null {
+  const h = d.reported_hours ?? [];
+  const n = h.reduce((a, b) => a + b, 0);
+  return n >= min ? { n, evening: h.slice(18).reduce((a, b) => a + b, 0) / n } : null;
 }

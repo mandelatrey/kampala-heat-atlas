@@ -1,7 +1,7 @@
 // Find your area: the search box above the map, and the card that sums up the atlas around a place.
 import { useId, useMemo, useState } from "react";
 import { Icon } from "../components/ui";
-import { cutsAt, cutsSentence, kampalaToday, plannedNear, plannedSentence, usePower } from "../power/cuts";
+import { cutsAt, cutsSentence, kampalaToday, plannedNear, plannedSentence, publishedNear, publishedSentence, usePower } from "../power/cuts";
 import { placeContext, searchPlaces, type Place } from "./places";
 import { summaryLines, type AreaSummary } from "./summary";
 
@@ -88,6 +88,7 @@ export function PlaceCard({ focus, summary, firstYear, radiusM, onClose }: {
   const power = powerLoad.state === "ready" ? powerLoad.data : null;
   const cuts = power?.areas.length ? cutsSentence(cutsAt(power, focus)) : null;
   const planned = power ? plannedNear(power, focus, kampalaToday()) : [];
+  const published = power ? publishedNear(power, focus) : [];
   const soon = (iso: string) => (new Date(`${iso}T00:00:00Z`).getTime() - new Date(`${kampalaToday()}T00:00:00Z`).getTime()) / 86400000 <= 6;
   return (
     <section className="place-card" aria-label={`Summary for ${focus.name ?? "this spot"}`} aria-live="polite">
@@ -103,7 +104,7 @@ export function PlaceCard({ focus, summary, firstYear, radiusM, onClose }: {
       {summary.state === "error" && <p className="muted">The summary could not be made ({summary.message}).</p>}
       {summary.state === "ready" && summary.data.cells === 0 && <p className="muted">This spot is outside the atlas area.</p>}
       {summary.state === "ready" && summary.data.cells > 0 && lines.length === 0 && <p className="muted">The atlas has no data around this spot.</p>}
-      {(lines.length > 0 || cuts || planned.length > 0) && (
+      {(lines.length > 0 || cuts || planned.length > 0 || published.length > 0) && (
         <dl>
           {planned.map((p) => (
             <div key={`${p.date}-${p.start}-${p.area}`} className="fact-line t-warn">
@@ -123,6 +124,12 @@ export function PlaceCard({ focus, summary, firstYear, radiusM, onClose }: {
               <dd>{cuts.text} <a href="#/atlas/solar">What would a battery cover?</a></dd>
             </div>
           )}
+          {published.map((p) => (
+            <div key={p.url || p.source} className="fact-line t-neutral">
+              <dt>Power cuts in the news</dt>
+              <dd>{publishedSentence(p)} {p.url && <a href={p.url} target="_blank" rel="noreferrer">Read it</a>}</dd>
+            </div>
+          ))}
         </dl>
       )}
       <p className="fine">

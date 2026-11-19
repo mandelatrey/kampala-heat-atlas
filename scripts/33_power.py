@@ -53,6 +53,8 @@ def main() -> None:
         if not a.sampled:
             print(f"  {a.name}: reports but no sampling period, so shown as reports only and left out of the model", file=sys.stderr)
     per_day = P.hours_per_cut_day(rows)
+    published_file = SAMPLING.parent / "published.csv"
+    published = P.read_published(published_file, places) if published_file.exists() else []
     for a in found:
         a.features = feats(a.lat, a.lon) or {}
     model = P.choose_model(found)
@@ -71,6 +73,7 @@ def main() -> None:
     OUT.write_text(json.dumps(dict(
         generated=TODAY.isoformat(), log_rows=len(rows), radius_m=RADIUS_M, near_logged_km=NEAR_LOGGED_KM,
         hours_per_cut_day=None if per_day is None else round(per_day, 1),
+        reported_hours=P.reported_hours(rows), published=published,
         areas=[dict(name=a.name, lat=round(a.lat, 5), lon=round(a.lon, 5), basis=a.basis, first=a.first, last=a.last,
                     days=a.days, cut_days=a.cut_days, cut_days_week=round(a.cut_days_week, 2),
                     hours_week=None if a.hours_week is None else round(a.hours_week, 1), kinds=a.kinds, sources=a.sources)

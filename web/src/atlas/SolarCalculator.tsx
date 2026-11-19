@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { getJson, useLoad } from "../data";
-import { cutsAt, cutsSentence, hoursAt, usePower, type PowerData } from "../power/cuts";
+import { cutsAt, cutsSentence, eveningShare, hoursAt, usePower, type PowerData } from "../power/cuts";
 import { monthlyBill, PRICES, solarResult, suggestedKwp, unitsForBill, type Building, type Tariffs } from "../power/solar";
 import { PlaceSearch } from "./PlaceCard";
 import { usePlaces } from "./places";
@@ -150,7 +150,11 @@ function Calculator({ t, yieldKwhPerKwp }: { t: Tariffs; yieldKwhPerKwp: number 
             {cuts > 0 && battery > 0 && (
               <li className="power">In a power cut the battery runs {who === "home" ? "lights, phones, a fan and the fridge" : "lights, tills, phones and a fridge"} for about {r.cutCoverHours.toFixed(1)} hours: {r.coveredHoursPerWeek >= cuts ? "enough for all" : `about ${n0(r.coveredHoursPerWeek)}`} of your {cuts} cut hours a week{r.coveredHoursPerWeek < cuts && " if it refills from the panels each day"}.{generator && r.fuelSavedPerMonth[0] > 0 && <> That is about {ugx(r.fuelSavedPerMonth[0])} to {ugx(r.fuelSavedPerMonth[1])} of generator fuel a month, counted in the payback.</>}</li>
             )}
-            {cuts > 0 && battery === 0 && (
+            {cuts > 0 && power && eveningShare(power) && (() => {
+            const e = eveningShare(power)!;
+            return <li className="power">Of {e.n} cuts in the atlas's log with a time, {Math.round(e.evening * 100)}% were reported between 6 pm and midnight, when panels make nothing: only a battery keeps the lights on then. (People also complain more in the evening, when they are home.)</li>;
+          })()}
+          {cuts > 0 && battery === 0 && (
               <li className="power">Without a battery, ordinary grid-connected panels switch off in a power cut, to keep line workers safe. To keep the lights on in cuts you need a battery and a hybrid inverter: try adding one above.</li>
             )}
           </ul>
