@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Term } from "../components/Term";
 import { Icon } from "../components/ui";
 import { useSite } from "../data";
 import { dataUrl, splitHeadline } from "../lib";
@@ -159,7 +160,7 @@ export function SitePage({ slug }: { slug: string }) {
           {ev && view === "everyday" ? (
             <>
               <p className="hero-sub">
-                Rain {f.rain_mm.toFixed(0)} mm · {f.rain_chance}% chance · storms {f.storm} · heat stress (WBGT) up to {f.wbgt_peak.toFixed(0)} °C in the sun
+                Rain {f.rain_mm.toFixed(0)} mm · {f.rain_chance}% chance · storms {f.storm} · <Term id="wbgt">heat stress</Term> up to {f.wbgt_peak.toFixed(0)} °C in the sun
               </p>
               <WorkdayArc day={day} start={start} end={end} rows={ev.rows} noun="activities fine" ends={["Morning", "Evening"]} />
             </>

@@ -197,3 +197,19 @@ ul.find li::marker { color: var(--accent); }
   .place-card { box-shadow: none; }
   .map-search { padding: 12px; }
 }
+
+/* simple mode */
+.head-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.reading { display: flex; gap: 10px; align-items: start; padding: 12px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); max-width: 78ch; color: var(--ink-2); }
+.reading svg { flex: none; margin-top: 3px; color: var(--accent); }
+.reading p { margin: 0; font-size: 14px; line-height: 1.55; }
+ul.find.plain { font-size: 15.5px; line-height: 1.55; color: var(--ink); gap: 12px; }
+.confidence { display: flex; gap: 10px; align-items: baseline; margin: 0; font-size: 14px; color: var(--ink-2); max-width: 90ch; }
+.conf-badge { flex: none; padding: 3px 10px; border-radius: 999px; font: 600 12px var(--f-sans); }
+.c-solid .conf-badge { background: var(--good-bg); color: var(--good-ink); }
+.c-fair .conf-badge { background: var(--warning-bg); color: var(--warning-ink); }
+.c-early .conf-badge { background: var(--critical-bg); color: var(--critical-ink); }
+details.how { border-top: 1px solid var(--line); padding-top: 10px; }
+details.how summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--ink-2); width: max-content; }
+details.how[open] summary { margin-bottom: 12px; }
+details.how .callout { margin-top: 12px; }

@@ -70,6 +70,10 @@ The atlas draws everything from data rather than from pictures:
   `docs/atlas/tables/`, and the page links every chart to its table. On the author's machine it also refreshes two
   small tables from the data folder (hourly wind for the wind rose; persistent hot-spot area).
 - An `atlas.json` written before this change (layers as coloured PNGs) still displays, without values under the cursor.
+- **Simple / Detailed**: the atlas opens in plain words (simple mode; the choice is remembered per browser). Each module
+  gives its findings plainly, a "How sure are we?" badge, and the research text under "How we know this"; map layers get
+  plain names (`web/src/atlas/simple.ts`). Underlined terms open a short definition from `web/src/glossary.ts`, which
+  is also listed at the bottom of the page (`#/atlas/glossary`).
 - **Find your area**: a search box over the map (place names from `docs/atlas/places.json`, made by `14b_places.py`),
   "Near me", and "Summarise this area" in the tap popup open a card that sums up the data layers within 500 m: how the
   heat ranks against the whole atlas area, change since the first epoch, ground cover and new building, tree-planting
