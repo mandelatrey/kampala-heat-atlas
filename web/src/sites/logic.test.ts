@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { DayBriefing, TradeRow } from "../types";
-import { hourShares, limitTone, scale, shareTone, sky, statusTone, stormAlert, weekSummary, workableShare } from "./logic";
+import { hourShares, limitTone, rowsOf, scale, shareTone, sky, statusTone, stormAlert, weekSummary, workableShare } from "./logic";
 
 const row = (key: TradeRow["key"], hours: [number, 0 | 1 | 2][]): TradeRow => ({
   key, trade: key, status: "LIMITED", label: "", go_hours: hours.filter(([, s]) => s === 0).length,
@@ -61,5 +61,33 @@ describe("site-weather summaries", () => {
     expect(scale(5, 0, 10)).toBe(0.5);
     expect(scale(-5, 0, 10)).toBe(0);
     expect(scale(50, 0, 10)).toBe(1);
+  });
+});
+
+describe("everyday view", () => {
+  const ev = (hours: [number, 0 | 1 | 2][][]): DayBriefing["everyday"] => ({
+    headline: "", hours: "06:00-21:00", groups: ["Getting around"], extras: [],
+    rows: hours.map((h, i) => ({ key: `a${i}`, name: `A${i}`, group: "Getting around", status: "LIMITED", label: "", go_hours: h.filter(([, s]) => s === 0).length, windows: "", causes: [], action: "", hours: h })),
+  });
+
+  it("summarises the activities, not the trades", () => {
+    const d = { ...day("Monday 1", "low", rows), everyday: ev([[[6, 0], [7, 0]], [[6, 0], [7, 2]]]) };
+    expect(rowsOf(d, "everyday")).toHaveLength(2);
+    expect(workableShare(d, "everyday")).toBeCloseTo(3 / 4);
+    expect(workableShare(d, "construction")).toBeCloseTo(3 / 6);
+    expect(hourShares(rowsOf(d, "everyday"))).toEqual([{ hour: 6, go: 2, total: 2 }, { hour: 7, go: 1, total: 2 }]);
+  });
+
+  it("falls back to the trades for briefings without everyday advice", () => {
+    const d = day("Monday 1", "low", rows);
+    expect(rowsOf(d, "everyday")).toBe(rows);
+    expect(workableShare(d, "everyday")).toBeCloseTo(3 / 6);
+  });
+
+  it("picks the best day by the view's own rows", () => {
+    const good = { ...day("Monday 1", "low", [row("concrete", [[8, 2]])]), everyday: ev([[[6, 0]]]) };
+    const bad = { ...day("Tuesday 2", "low", [row("concrete", [[8, 0]])]), everyday: ev([[[6, 2]]]) };
+    expect(weekSummary([good, bad], "everyday")).toMatch(/best day Mon$/);
+    expect(weekSummary([good, bad], "construction")).toMatch(/best day Tue$/);
   });
 });

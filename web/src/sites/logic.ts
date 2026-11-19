@@ -1,6 +1,20 @@
 // Pure summaries behind the site-weather views. Everything here is derived from the briefing the
 // Python scripts write; nothing is forecast or decided in the browser.
-import type { DayBriefing, HourStatus, Status, TradeRow } from "../types";
+import type { DayBriefing, HourStatus, Status } from "../types";
+
+/** Who the page is for: the public's everyday plans, or construction trades. */
+export type View = "everyday" | "construction";
+
+/** What the hour-by-hour summaries need from a trade or an activity row. */
+export interface HourRow {
+  go_hours: number;
+  hours: [number, HourStatus][];
+}
+
+/** The rows a view shows for a day (everyday falls back to the trades for briefings without it). */
+export function rowsOf(day: DayBriefing, view: View): HourRow[] {
+  return view === "everyday" && day.everyday ? day.everyday.rows : day.rows;
+}
 
 export type Tone = "good" | "warning" | "critical";
 
@@ -22,8 +36,8 @@ export interface HourShare {
   total: number;
 }
 
-/** For each working hour, how many trades can work without weather limits. */
-export function hourShares(rows: TradeRow[]): HourShare[] {
+/** For each hour, how many rows (trades or activities) have no weather limit. */
+export function hourShares(rows: HourRow[]): HourShare[] {
   const hours = rows[0]?.hours.map(([h]) => h) ?? [];
   return hours.map((hour) => ({
     hour,
@@ -38,18 +52,18 @@ export function shareTone({ go, total }: HourShare): Tone {
   return go * 2 >= total ? "warning" : "critical";
 }
 
-/** Share of all trade-hours in the day that are go hours (0-1). */
-export function workableShare(day: DayBriefing): number {
-  const perTrade = day.rows[0]?.hours.length ?? 0;
-  const total = day.rows.length * perTrade;
+/** Share of all row-hours in the day (trades or activities) that are go hours (0-1). */
+export function workableShare(day: DayBriefing, view: View = "construction"): number {
+  const rows = rowsOf(day, view);
+  const total = rows.length * (rows[0]?.hours.length ?? 0);
   if (total === 0) return 0;
-  return day.rows.reduce((sum, r) => sum + r.go_hours, 0) / total;
+  return rows.reduce((sum, r) => sum + r.go_hours, 0) / total;
 }
 
 const SHORT_DAY = (day: string) => day.split(" ")[0]?.slice(0, 3) ?? day;
 
 /** One line for the week, e.g. "Storms likely Thu and Sat · best day Mon". */
-export function weekSummary(days: DayBriefing[]): string {
+export function weekSummary(days: DayBriefing[], view: View = "construction"): string {
   if (days.length === 0) return "";
   const likely = days.filter((d) => d.facts.storm === "likely").map((d) => SHORT_DAY(d.day));
   const possible = days.filter((d) => d.facts.storm === "possible").length;
@@ -58,7 +72,7 @@ export function weekSummary(days: DayBriefing[]): string {
     : likely.length > 1 ? `Storms likely ${likely.slice(0, -1).join(", ")} and ${likely.at(-1)}`
     : possible ? `Storms possible on ${possible} day${possible > 1 ? "s" : ""}`
     : "No storm risk this week";
-  const best = days.reduce((a, b) => (workableShare(b) > workableShare(a) ? b : a));
+  const best = days.reduce((a, b) => (workableShare(b, view) > workableShare(a, view) ? b : a));
   return `${storms} · best day ${SHORT_DAY(best.day)}`;
 }
 

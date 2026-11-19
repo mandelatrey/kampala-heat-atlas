@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Icon, StatusPill } from "../components/ui";
-import type { DayBriefing, SiteThresholds, TradeRow } from "../types";
+import type { DayBriefing, SiteThresholds } from "../types";
 import {
-  hourShares, hourTone, limitTone, scale, shareTone, STATUS_WORD, statusTone, weekSummary, workableShare, type Tone,
+  hourShares, hourTone, limitTone, scale, shareTone, STATUS_WORD, statusTone, weekSummary, workableShare, type HourRow, type Tone,
+  type View,
 } from "./logic";
 
 const hh = (h: number) => `${String(h).padStart(2, "0")}:00`;
@@ -11,11 +12,13 @@ const TONE_WORD: Record<Tone, string> = { good: "go", warning: "with care", crit
 // ---------------------------------------------------------------- workday arc
 
 /**
- * The working day as an arc (like a sun path): one dot per working hour, coloured by how many
- * trades can work then. Hover or focus a dot for the count.
+ * The day as an arc (like a sun path): one dot per hour, coloured by how many trades can work (or
+ * everyday activities are fine) then. Hover or focus a dot for the count.
  */
-export function WorkdayArc({ day, start, end }: { day: DayBriefing; start: number; end: number }) {
-  const shares = hourShares(day.rows);
+export function WorkdayArc({ day, start, end, rows = day.rows, noun = "trades can work", ends = ["Start", "Finish"] }: {
+  day: DayBriefing; start: number; end: number; rows?: HourRow[]; noun?: string; ends?: [string, string];
+}) {
+  const shares = hourShares(rows);
   const [active, setActive] = useState<number | null>(null);
   const W = 640, H = 150, x0 = 28, x1 = W - 28, base = 120, amp = 88;
   const at = (t: number) => ({ x: x0 + (x1 - x0) * t, y: base - amp * Math.sin(Math.PI * Math.min(1, Math.max(0, t))) });
@@ -27,7 +30,7 @@ export function WorkdayArc({ day, start, end }: { day: DayBriefing; start: numbe
 
   return (
     <div className="arc">
-      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Trades that can work, hour by hour: ${shares.map((s) => `${hh(s.hour)} ${s.go} of ${s.total}`).join(", ")}`}>
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`How many ${noun}, hour by hour: ${shares.map((s) => `${hh(s.hour)} ${s.go} of ${s.total}`).join(", ")}`}>
         <line x1={0} x2={W} y1={base} y2={base} className="arc-ground" />
         <path d={curve} className="arc-path" />
         {storm !== null && storm >= start && storm < end && (
@@ -44,7 +47,7 @@ export function WorkdayArc({ day, start, end }: { day: DayBriefing; start: numbe
           return (
             <circle
               key={s.hour} cx={p.x} cy={p.y} r={active === i ? 9 : 7} className={`arc-dot dot-${shareTone(s)}`}
-              tabIndex={0} aria-label={`${hh(s.hour)}: ${s.go} of ${s.total} trades can work`}
+              tabIndex={0} aria-label={`${hh(s.hour)}: ${s.go} of ${s.total} ${noun}`}
               onMouseEnter={() => setActive(i)} onMouseLeave={() => setActive(null)} onFocus={() => setActive(i)} onBlur={() => setActive(null)}
             />
           );
@@ -52,17 +55,17 @@ export function WorkdayArc({ day, start, end }: { day: DayBriefing; start: numbe
       </svg>
       {shown && (
         <div className="arc-tip" style={{ left: `${(at(tOf(shown.hour)).x / W) * 100}%`, top: `${(at(tOf(shown.hour)).y / H) * 100}%` }} role="status">
-          <b>{hh(shown.hour)}</b> · {shown.go} of {shown.total} trades can work
+          <b>{hh(shown.hour)}</b> · {shown.go} of {shown.total} {noun}
         </div>
       )}
       <div className="arc-foot">
-        <span><b>{hh(start)}</b><small>Start</small></span>
+        <span><b>{hh(start)}</b><small>{ends[0]}</small></span>
         <span className="arc-mid">
           {storm !== null && day.facts.storm !== "low"
             ? <><Icon.storm size={16} /> Storms {day.facts.storm} from {hh(storm)}</>
             : <><Icon.sun /> No storm risk</>}
         </span>
-        <span className="r"><b>{hh(end)}</b><small>Finish</small></span>
+        <span className="r"><b>{hh(end)}</b><small>{ends[1]}</small></span>
       </div>
     </div>
   );
@@ -72,22 +75,25 @@ export function WorkdayArc({ day, start, end }: { day: DayBriefing; start: numbe
 
 const short = (day: string, i: number) => (i === 0 ? "Today" : day.split(" ")[0]?.slice(0, 3) ?? day);
 
-/** The week as bars of workable trade-hours; choosing a day switches the page to it. */
-export function WeekStrip({ days, selected, onSelect }: { days: DayBriefing[]; selected: number; onSelect: (i: number) => void }) {
+/** The week as bars of workable trade-hours (or fine activity-hours); choosing a day switches the page to it. */
+export function WeekStrip({ days, selected, onSelect, view = "construction" }: {
+  days: DayBriefing[]; selected: number; onSelect: (i: number) => void; view?: View;
+}) {
+  const what = view === "everyday" ? "activity-hours" : "trade hours";
   return (
     <section className="card card-pad week" aria-label="This week">
       <div className="card-head">
         <h2>This week</h2>
-        <span className="muted week-sum">{weekSummary(days)}</span>
+        <span className="muted week-sum">{weekSummary(days, view)}</span>
       </div>
       <div className="week-bars" role="group" aria-label="Choose a day">
         {days.map((d, i) => {
-          const share = workableShare(d);
+          const share = workableShare(d, view);
           const pct = Math.round(share * 100);
           return (
             <button
               key={d.date} type="button" className="wk" aria-pressed={i === selected} onClick={() => onSelect(i)}
-              aria-label={`${d.day}: ${pct}% of trade hours workable, storms ${d.facts.storm}`}
+              aria-label={`${d.day}: ${pct}% of ${what} with no weather limit, storms ${d.facts.storm}`}
             >
               <span className="wk-val num">{pct}%</span>
               <span className="wk-track"><span className="wk-bar" style={{ height: `${Math.max(6, share * 100)}%` }} /></span>
@@ -97,7 +103,7 @@ export function WeekStrip({ days, selected, onSelect }: { days: DayBriefing[]; s
           );
         })}
       </div>
-      <p className="fine">Bars: share of trade-hours with no weather limit. <Icon.storm size={12} /> storms possible or likely.</p>
+      <p className="fine">Bars: share of {what} with no weather limit. <Icon.storm size={12} /> storms possible or likely.</p>
     </section>
   );
 }
@@ -159,9 +165,9 @@ export function Gauges({ day, th }: { day: DayBriefing; th: SiteThresholds | nul
 
 // ---------------------------------------------------------------- trade table
 
-function HourCells({ row }: { row: TradeRow }) {
+export function HourCells({ row, name }: { row: HourRow; name: string }) {
   return (
-    <div className="cells" role="list" aria-label={`${row.trade}, hour by hour`}>
+    <div className="cells" role="list" aria-label={`${name}, hour by hour`}>
       {row.hours.map(([h, s], i) => {
         const gap = i > 0 && h !== (row.hours[i - 1]?.[0] ?? h) + 1;
         const tone = hourTone(s);
@@ -208,7 +214,7 @@ export function TradeTable({ day, working }: { day: DayBriefing; working: string
               <b>{r.trade}</b>
               <StatusPill tone={statusTone(r.status)}>{r.status === "GO" ? STATUS_WORD.GO : r.label.replace(/^go /, "Go ").replace(/^STOP/, "Stop")}</StatusPill>
             </div>
-            <HourCells row={r} />
+            <HourCells row={r} name={r.trade} />
             <span className="trade-go num" title="Go hours">{r.go_hours} h</span>
             <p className="trade-act">
               {r.causes.length > 0 && r.key !== "labour" && <span className="muted">Limited by {r.causes.join(", ")}. </span>}

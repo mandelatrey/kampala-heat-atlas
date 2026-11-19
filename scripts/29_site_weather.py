@@ -18,6 +18,8 @@ Per site (<out>/<slug>/):
                                              1991-2020 climate of the site, and yesterday's forecast
   archive/monthly/YYYY-MM.md                 month summary vs normal, for programme and claim records
   index.html                                 the page
+Each day of the briefing also carries "everyday": go / with care / stop by hour for daily activities (travel,
+events, laundry, children outside, farming), from scripts/everyday.py and thresholds.json -> "everyday".
 
 Methods (screening level, documented so a reviewer can check them):
   WBGT     0.7 Tnw + 0.2 Tg + 0.1 Ta; Tg from mean radiant temperature (radiant budget as in
@@ -275,6 +277,7 @@ CLIM = climatology()
 # ---------------------------------------------------------------- figures (scripts/meteogram_site.py)
 sys.path.insert(0, str(Path(__file__).parent))
 import meteogram_site  # noqa: E402
+import everyday  # noqa: E402  (everyday advice for the public, from the same forecast)
 
 _sites = json.loads((OUT / "sites.json").read_text())["sites"] if (OUT / "sites.json").exists() else []
 meteogram_site.build(fc, dict(name=A.name, short=A.name.replace("Central ", ""), lat=A.lat, lon=A.lon, alt=A.alt,
@@ -382,7 +385,8 @@ def briefing(d, g):
     if TH.get("_seasonal_break_active"):
         extras.append("Midday outdoor-work ban in force (12:00-15:00): those hours are excluded from the working day.")
     storm = "likely" if stl else "possible" if stp else "low"
-    return dict(date=f"{d:%Y-%m-%d}", day=f"{d:%A %d %B}", headline=head, rows=rows, extras=extras,
+    pub = dict(everyday=everyday.day(g, TH["everyday"], aq)) if "everyday" in TH else {}
+    return dict(date=f"{d:%Y-%m-%d}", day=f"{d:%A %d %B}", headline=head, rows=rows, extras=extras, **pub,
                 facts=dict(rain_mm=round(rain, 1), rain_chance=int(g.precipitation_probability.max()), storm=storm,
                            storm_from=(stl or stp or [""])[0][:2], wbgt_peak=round(float(g.wbgt_sun.max()), 1),
                            gust_hook_max=round(float(g.gust_hook.max()), 1), go_hours={x["key"]: x["go_hours"] for x in rows}))

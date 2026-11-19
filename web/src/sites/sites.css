@@ -190,3 +190,17 @@
   .towns td.headline { grid-column: 1 / -1; order: 3; }
   .towns td.wbgt, .towns td.storm { display: none; }
 }
+
+/* who the page is for: everyday plans or construction trades */
+.view-switch { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); width: max-content; }
+.view-switch button {
+  border: 0; background: none; color: var(--ink-2); cursor: pointer; padding: 7px 16px; border-radius: 999px;
+  font: 600 13.5px var(--f-sans);
+}
+.view-switch button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.view-switch button:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+
+/* everyday activities, grouped (Getting around, Events & goods, ...) */
+.activity-group { display: grid; }
+.activity-group .group-name { padding: 16px 0 4px; color: var(--muted); }
+.everyday .cells.head .cell { font-size: 10.5px; }

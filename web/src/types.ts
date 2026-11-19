@@ -22,6 +22,34 @@ export interface TradeRow {
   hours: [number, HourStatus][];
 }
 
+/** One everyday activity for the day (scripts/everyday.py): the same go / with care / stop strip as a trade. */
+export interface EverydayRow {
+  key: string;
+  name: string;
+  /** e.g. "Getting around"; one of Everyday.groups */
+  group: string;
+  status: Status;
+  /** e.g. "Best 06-12 h", "With care, not 14-17 h", "Fine all day" */
+  label: string;
+  go_hours: number;
+  windows: string;
+  causes: string[];
+  /** What to do, in plain words. */
+  action: string;
+  /** [hour of day, status] for each hour from Everyday.hours. */
+  hours: [number, HourStatus][];
+}
+
+/** Everyday advice for the public for one day. */
+export interface Everyday {
+  headline: string;
+  /** e.g. "06:00-21:00" */
+  hours: string;
+  groups: string[];
+  rows: EverydayRow[];
+  extras: string[];
+}
+
 export interface DayFacts {
   rain_mm: number;
   rain_chance: number;
@@ -40,6 +68,8 @@ export interface DayBriefing {
   rows: TradeRow[];
   extras: string[];
   facts: DayFacts;
+  /** Briefings written before the everyday advice was added have none. */
+  everyday?: Everyday;
 }
 
 /** <site>/site_briefing_latest.json */
