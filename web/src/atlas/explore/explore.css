@@ -1,0 +1,89 @@
+/* hands-on panels under the growth, heat and settlements modules */
+.explore { border-top: 1px solid var(--line); padding-top: 18px; }
+.explore-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+.explore-card { display: grid; gap: 10px; background: var(--surface-2); border-radius: 14px; padding: 16px; min-width: 0; }
+.explore-card h3 { margin: 0; font-size: 17px; font-weight: 620; letter-spacing: -0.01em; }
+.explore-card p { margin: 0; font-size: 14px; color: var(--ink-2); }
+.explore-card .muted { color: var(--muted); }
+.explore-grid.one { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 860px) { .explore-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* watch the city grow */
+.grow-map { position: relative; width: 100%; border-radius: 10px; overflow: hidden; background-size: 100% 100%; background-color: #d4d5cf; }
+.grow-map canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.grow-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.grow-count { font-variant-numeric: tabular-nums; }
+.grow-count b { font-size: 20px; color: var(--ink); font-weight: 620; }
+
+/* which way did it grow */
+.compass { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.compass-centre { display: grid; place-items: center; font: 600 12px var(--f-mono); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.compass-dir {
+  position: relative; overflow: hidden; display: grid; gap: 2px; place-items: center; min-height: 54px; padding: 8px 6px;
+  border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); color: var(--ink); cursor: pointer;
+  font: 600 13px var(--f-sans); text-transform: capitalize;
+}
+.compass-dir::before { content: ""; position: absolute; left: 0; bottom: 0; height: var(--share, 0%); width: 100%; background: color-mix(in srgb, var(--accent) 22%, transparent); transition: height .4s; }
+.compass-dir > * { position: relative; }
+.compass-dir small { font: 500 11.5px var(--f-mono); color: var(--ink-2); text-transform: none; }
+.compass-dir[aria-pressed="true"] { outline: 2px solid var(--ink); outline-offset: 1px; }
+.compass-dir.best { border-color: var(--accent); border-width: 2px; }
+.compass-dir.second { border-color: color-mix(in srgb, var(--accent) 50%, var(--line-strong)); }
+.compass-dir:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+@media (prefers-reduced-motion: reduce) { .compass-dir::before { transition: none; } }
+
+/* hottest and coolest neighbourhoods */
+.rank-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 520px) { .rank-cols { grid-template-columns: minmax(0, 1fr); } }
+.rank-list { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 2px; counter-reset: r; }
+.rank-row {
+  width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 48px auto; align-items: center; gap: 8px; padding: 5px 6px;
+  border: 0; border-radius: 8px; background: none; color: var(--ink); cursor: pointer; text-align: left; font: inherit;
+}
+.rank-row:hover { background: var(--surface); }
+.rank-row:focus-visible { outline: 2px solid var(--focus); }
+.rank-name { display: grid; min-width: 0; }
+.rank-name b { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rank-name small { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rank-bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.rank-bar i { display: block; height: 100%; border-radius: 3px; }
+.rank-bar i.hot { background: var(--hot); } .rank-bar i.cool { background: var(--cool); }
+.rank-val { font: 500 12.5px var(--f-mono); font-variant-numeric: tabular-nums; }
+
+/* kinds of place */
+.zone-chips .chip { font-size: 12.5px; }
+.zone-card { display: grid; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.zone-card b { font-size: 15px; color: var(--ink); }
+.scale { position: relative; height: 34px; margin: 4px 6px 0; }
+.scale::before { content: ""; position: absolute; left: 0; right: 0; top: 10px; height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--cool), var(--line) 30%, var(--hot)); opacity: .55; }
+.scale-zero { position: absolute; top: 4px; width: 2px; height: 16px; background: var(--ink-2); transform: translateX(-1px); }
+.scale-label { position: absolute; top: 22px; transform: translateX(-50%); font: 500 10.5px var(--f-mono); color: var(--muted); white-space: nowrap; }
+.scale-dot { position: absolute; top: 5px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; border: 2px solid var(--surface); transition: left .35s; }
+.scale-dot.then { background: var(--line-strong); width: 10px; height: 10px; margin-left: -5px; top: 7px; }
+.scale-dot.now.hot { background: var(--hot); } .scale-dot.now.cool { background: var(--cool); }
+
+/* packing in */
+.pack-slider { width: 100%; accent-color: var(--ink); }
+.pack-stops { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; margin-top: -4px; }
+.pack-stops button { border: 0; background: none; padding: 2px; font: 500 11.5px var(--f-sans); color: var(--muted); cursor: pointer; text-align: center; }
+.pack-stops button:first-child { text-align: left; } .pack-stops button:last-child { text-align: right; }
+.pack-stops button.on { color: var(--ink); font-weight: 650; }
+.pack-now { display: grid; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.pack-now b { color: var(--ink); }
+.pack-now > b:first-child { font-size: 15px; }
+.thermo { position: relative; height: 40px; margin: 4px 6px 0; }
+.thermo::before { content: ""; position: absolute; left: 0; right: 0; top: 8px; height: 12px; border-radius: 6px; background: var(--line); }
+.thermo-fill { position: absolute; top: 8px; height: 12px; border-radius: 6px; transition: left .35s, width .35s; }
+.thermo-fill.hot { background: var(--hot); } .thermo-fill.cool { background: var(--cool); }
+.thermo-zero { position: absolute; top: 2px; width: 2px; height: 24px; background: var(--ink-2); transform: translateX(-1px); z-index: 1; }
+.thermo-then { position: absolute; top: 4px; width: 3px; height: 20px; background: var(--ink); opacity: .55; transform: translateX(-1px); z-index: 1; transition: left .35s; }
+.thermo-label { position: absolute; top: 28px; transform: translateX(-50%); font: 500 10.5px var(--f-mono); color: var(--muted); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .thermo-fill, .thermo-then, .scale-dot { transition: none; } }
+.traj-cards { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.traj-cards li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.traj-cards li.most { border-color: var(--hot); }
+.traj-name { font-weight: 620; font-size: 14px; color: var(--ink); }
+.traj-change { font: 600 14px var(--f-mono); color: var(--hot); font-variant-numeric: tabular-nums; }
+.traj-bar { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.traj-bar i { display: block; height: 100%; background: var(--hot); border-radius: 3px; }
+.traj-story { grid-column: 1 / -1; font-size: 12.5px; color: var(--ink-2); }

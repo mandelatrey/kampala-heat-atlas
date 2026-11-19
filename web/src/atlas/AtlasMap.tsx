@@ -8,6 +8,7 @@ import { useIsDark } from "../theme";
 import { atlasUrl } from "./data";
 import { formatLatLon, gridGeo } from "./geo";
 import { PlaceCard, PlaceSearch, type Focus } from "./PlaceCard";
+import { onFocusRequest } from "./focus";
 import { nearest, usePlaces, type Place } from "./places";
 import { describe, getRaster, paint, valueAt, type Raster } from "./raster";
 import { splitImage, yearSeries } from "./series";
@@ -433,6 +434,15 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
     }
     if (!wide) window.setTimeout(() => card.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
   };
+
+  // other parts of the page can ask the map to show a place (e.g. the heat ranking)
+  const goToNow = useRef(goTo);
+  goToNow.current = goTo;
+  useEffect(() => onFocusRequest((f) => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    (ref && "current" in ref ? ref.current : null)?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    goToNow.current(f, true);
+  }), [ref]);
 
   const locate = () => {
     if (!("geolocation" in navigator)) return;

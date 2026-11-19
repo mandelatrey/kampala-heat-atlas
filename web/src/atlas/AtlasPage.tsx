@@ -8,6 +8,10 @@ import { LandcoverChart, LczChart, SolarChart, TrajectoryChart, TreesChart, Wind
 import { atlasUrl, useAtlas } from "./data";
 import { simpleAtlas } from "./simple";
 import { SolarCalculator } from "./SolarCalculator";
+import { GrowthExplorer } from "./explore/GrowthExplorer";
+import { HeatExplorer } from "./explore/HeatExplorer";
+import { PackingIn } from "./explore/PackingIn";
+import "./explore/explore.css";
 import { hourLabel, num, pctChange, pctRange, range, signed, thousands, useStats, type Stats } from "./stats";
 import type { Atlas } from "./types";
 import "./atlas.css";
@@ -181,6 +185,7 @@ function Content({ atlas: rawAtlas, stats, mapRef }: { atlas: Atlas; stats: Stat
           <li>Classifier <Term id="agreement">agreement with its training labels</Term> is {pctRange(n.label_agreement)} % (<Term id="kappa">kappa</Term> {range(n.kappa, 2)}) on held-out samples.</li>
         </>}
         figure={<LandcoverChart c={ch.landcover} href={table(ch.landcover.source)} />}
+        after={<GrowthExplorer atlas={rawAtlas} stats={stats} />}
         callout={<><b>Before citing.</b> Agreement with training labels is not map accuracy. {num(n.validation_points)} <Term id="validation">validation points</Term> still need to be labelled by eye. Tree-cover gains probably include seasonal cropland confusion.</>}
         sure={{ level: "fair", why: <>The growth map matches the examples it learned from well, but has not yet been checked spot by spot by eye. Some apparent new trees may be crops.</> }}
       />
@@ -204,6 +209,7 @@ function Content({ atlas: rawAtlas, stats, mapRef }: { atlas: Atlas; stats: Stat
           <li><Term id="lst">Surface temperature</Term> covers 100 % of the area, against {pctRange(n.c2st_coverage)} % for the <Term id="c2st">standard product</Term>, and agrees with it at <Term id="r">r</Term> = {range(n.lst_r, 2)}.</li>
         </>}
         figure={<LczChart c={ch.lcz} href={table(ch.lcz.source)} />}
+        after={<HeatExplorer atlas={rawAtlas} stats={stats} />}
         sure={{ level: "solid", why: <>Measured by satellite in three dry seasons, and checked against the satellite programme's own product, which it matches closely.</> }}
       />
 
@@ -219,6 +225,7 @@ function Content({ atlas: rawAtlas, stats, mapRef }: { atlas: Atlas; stats: Stat
           <li>Detected well: Kawempe Mbogo, Kazo Angola, Kifumbira, Kalerwe.</li>
         </>}
         figure={<TrajectoryChart c={ch.trajectories} href={table(ch.trajectories.source)} />}
+        after={<PackingIn stats={stats} />}
         callout={<>
           <b>Checked against the literature.</b> Against the 58 informal settlements mapped by the slum dwellers' federation
           (SDI/NSDFU/ACTogether, 2014), georeferenced from their map book: established informal settlements are as hot as other
