@@ -88,6 +88,8 @@ ul.find li::marker { color: var(--accent); }
 .toggle { white-space: nowrap; display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-2); cursor: pointer; }
 .toggle input { accent-color: var(--ink); }
 .map-status { left: 50%; top: 12px; transform: translateX(-50%); font-size: 13px; color: var(--ink-2); padding: 8px 12px; }
+.basemap-note { left: 12px; right: 200px; top: 40px; font-size: 12.5px; color: var(--ink-2); max-width: 520px; }
+@media (max-width: 860px) { .basemap-note { right: 12px; } }
 .map-status.error { color: var(--critical-ink); background: var(--critical-bg); }
 .maplibregl-map { font-family: var(--f-sans); }
 .maplibregl-ctrl-group { border-radius: 12px !important; overflow: hidden; box-shadow: var(--shadow) !important; border: 1px solid var(--line); }

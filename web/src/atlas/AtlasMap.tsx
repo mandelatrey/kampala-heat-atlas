@@ -1,7 +1,7 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 // MapLibre finds its worker next to its own file, which Vite moves; build the worker and say where it is
 import mapWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
-import type { Map as MlMap, MapMouseEvent, Popup } from "maplibre-gl";
+import type { Map as MlMap, MapMouseEvent, Popup, StyleSpecification } from "maplibre-gl";
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../components/ui";
 import { useIsDark } from "../theme";
@@ -14,6 +14,11 @@ import type { Atlas, AtlasLayer } from "./types";
 // Street map: OpenFreeMap's vector tiles (OpenStreetMap data, no key). The research layer goes in under the
 // first label layer, so place and road names stay readable on top of it. MapLibre loads with the map, not the page.
 const STYLE = (dark: boolean) => `https://tiles.openfreemap.org/styles/${dark ? "dark" : "positron"}`;
+/** A plain background, used when the street map cannot load, so the research layer still shows. */
+const BLANK = (dark: boolean): StyleSpecification => ({
+  version: 8, sources: {},
+  layers: [{ id: "background", type: "background", paint: { "background-color": dark ? "#2a2c2b" : "#d4d5cf" } }],
+});
 const DATA = "atlas-data";
 const RELIEF = "atlas-relief";
 
@@ -103,6 +108,8 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
   const [relief, setRelief] = useState(false);
   const [status, setStatus] = useState<Status>({ state: "loading" });
   const [cursor, setCursor] = useState<string | null>(null);
+  const [basemapNote, setBasemapNote] = useState<string | null>(null);   // why the street map is missing
+  const blank = useRef(false);                                           // showing BLANK instead of the street map
   const [styleGen, setStyleGen] = useState(0);         // bumps on every style load: layers are re-added then
   const ready = styleGen > 0;
   const mapEl = useRef<HTMLDivElement>(null);
@@ -124,32 +131,60 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
     if (!el) return;
     let m: MlMap | null = null;
     let cancelled = false;
+    let started = false;
+    const fail = (why: string, err?: unknown) => {
+      const detail = err instanceof Error ? err.message : err ? String(err) : "";
+      console.error("map:", why, err);
+      if (!cancelled) setStatus({ state: "error", message: detail ? `${why}: ${detail}` : why });
+    };
+    // no street map (blocked, offline, worker trouble): carry on with a plain background and say why
+    const withoutStreets = (why: string, err?: unknown) => {
+      if (cancelled || blank.current || !m) return;
+      console.warn("map: street map unavailable:", why, err);
+      blank.current = true;
+      setBasemapNote(why);
+      m.setStyle(BLANK(darkNow.current), { diff: false });
+    };
+    const slow = window.setTimeout(() => {
+      if (!started) withoutStreets("it did not load within 15 s");
+    }, 15000);
     import("maplibre-gl").then((lib) => {
       if (cancelled) return;
-      lib.setWorkerUrl(mapWorkerUrl);
-      const [[s, wst], [n, e]] = geo.bounds;
-      const pad = 0.3 * Math.max(n - s, e - wst);
-      m = new lib.Map({
-        container: el, style: STYLE(darkNow.current),
-        bounds: [[wst, s], [e, n]], fitBoundsOptions: { padding: 16 },
-        maxBounds: [[wst - pad, s - pad], [e + pad, n + pad]], minZoom: 8, maxZoom: 17.5,
-        dragRotate: false, pitchWithRotate: false, touchPitch: false,
-        cooperativeGestures: true,       // page scroll stays page scroll: Ctrl + scroll, or two fingers on a phone
-        attributionControl: { compact: true },
-      });
-      m.touchZoomRotate.disableRotation();
-      m.addControl(new lib.NavigationControl({ showCompass: false }), "top-right");
-      m.addControl(new lib.ScaleControl({ unit: "metric", maxWidth: 110 }), "top-left");
-      m.on("style.load", () => {
-        strengthenLabels(m!, darkNow.current);
+      try {
+        lib.setWorkerUrl(mapWorkerUrl);
+        const [[s, wst], [n, e]] = geo.bounds;
+        const pad = 0.3 * Math.max(n - s, e - wst);
+        m = new lib.Map({
+          container: el, style: STYLE(darkNow.current),
+          bounds: [[wst, s], [e, n]], fitBoundsOptions: { padding: 16 },
+          maxBounds: [[wst - pad, s - pad], [e + pad, n + pad]], minZoom: 8, maxZoom: 17.5,
+          dragRotate: false, pitchWithRotate: false, touchPitch: false,
+          cooperativeGestures: true,       // page scroll stays page scroll: Ctrl + scroll, or two fingers on a phone
+          attributionControl: { compact: true },
+        });
+      } catch (err) {
+        return fail("the map could not start (it needs WebGL)", err);
+      }
+      const mm = m;
+      mm.touchZoomRotate.disableRotation();
+      mm.addControl(new lib.NavigationControl({ showCompass: false }), "top-right");
+      mm.addControl(new lib.ScaleControl({ unit: "metric", maxWidth: 110 }), "top-left");
+      mm.on("style.load", () => {
+        started = true;
+        strengthenLabels(mm, darkNow.current);
         setStyleGen((g) => g + 1);
       });
-      m.on("error", (ev) => console.warn("map:", ev.error?.message ?? ev));
+      mm.on("error", (ev) => {
+        // before the street map has loaded, an error means it will not (worker, style or network)
+        if (!started && !blank.current) withoutStreets(ev.error?.message ?? "it could not be fetched", ev.error);
+        else console.warn("map:", ev.error?.message ?? ev);
+      });
       ml.current = lib;
-      map.current = m;
-    }, (err: unknown) => setStatus({ state: "error", message: err instanceof Error ? err.message : String(err) }));
+      map.current = mm;
+    }, (err: unknown) => fail("the map code could not load", err));
     return () => {
       cancelled = true;
+      window.clearTimeout(slow);
       m?.remove();
       map.current = null;
     };
@@ -159,7 +194,7 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
   useEffect(() => {
     if (darkNow.current === dark) return;
     darkNow.current = dark;
-    map.current?.setStyle(STYLE(dark), { diff: false });
+    map.current?.setStyle(blank.current ? BLANK(dark) : STYLE(dark), { diff: false });
   }, [dark]);
 
   // optional relief shading, under the data layer
@@ -297,6 +332,14 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
           {status.state === "loading" && <div className="float map-status" role="status">Loading {layer?.label}…</div>}
           {status.state === "error" && <div className="float map-status error" role="alert">This layer could not be loaded ({status.message}).</div>}
           {cursor && <div className="cursor-read" role="status">{cursor}</div>}
+          {basemapNote && (
+            <div className="float basemap-note" role="status">
+              Street map unavailable ({basemapNote}), so the layer is shown on a plain background.{" "}
+              {/worker/i.test(basemapNote)
+                ? "MapLibre's helper script did not load; on the dev server, restart it with npm run dev -- --force."
+                : "An ad or privacy blocker, or the network, may be stopping tiles.openfreemap.org."}
+            </div>
+          )}
         </div>
         <p className="caption">
           {layer?.caption}{" "}
