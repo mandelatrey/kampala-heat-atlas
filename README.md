@@ -43,7 +43,7 @@ python scripts/00_check_setup.py
 | Land cover, change, building constraint | `07`, `07b`, `07c` |
 | Thermal classes · settlements · trees · solar | `08`, `09`/`09b`, `10`, `11` |
 | Figures · animations · atlas | `12`, `13`, `14` (map layers), `14c` (numbers and charts); without the rasters, `14d` (map layers from the published images) |
-| Place names for the maps (OpenStreetMap; needs internet) | `14b` |
+| Place names for the maps and the atlas search (OpenStreetMap via Overpass, or `--tiles` for OpenFreeMap's vector tiles; needs internet) | `14b` |
 | 3D model · 3D visuals · website | `15`, `16`, `17` |
 
 Large data go to `~/kampala-thesis-data` (set in `config/config.yaml`) and are not in this repository.
@@ -70,6 +70,10 @@ The atlas draws everything from data rather than from pictures:
   `docs/atlas/tables/`, and the page links every chart to its table. On the author's machine it also refreshes two
   small tables from the data folder (hourly wind for the wind rose; persistent hot-spot area).
 - An `atlas.json` written before this change (layers as coloured PNGs) still displays, without values under the cursor.
+- **Find your area**: a search box over the map (place names from `docs/atlas/places.json`, made by `14b_places.py`),
+  "Near me", and "Summarise this area" in the tap popup open a card that sums up the data layers within 500 m: how the
+  heat ranks against the whole atlas area, change since the first epoch, ground cover and new building, tree-planting
+  priority, rooftop solar and informal-type housing (`web/src/atlas/summary.ts`, all computed in the browser).
 - **Without the analysis rasters** (they come from scripts 01–13 and live in `paths.data_root`, outside git),
   `14_atlas.py` stops before changing anything. `python scripts/14d_layers_from_images.py` instead reads the published
   layer images back into the same GeoTIFF format: categories exactly, continuous layers to one colour step (±0.03 °C

@@ -7,8 +7,10 @@ import { Icon } from "../components/ui";
 import { useIsDark } from "../theme";
 import { atlasUrl } from "./data";
 import { formatLatLon, gridGeo } from "./geo";
+import { PlaceCard, PlaceSearch, type Focus } from "./PlaceCard";
 import { nearest, usePlaces, type Place } from "./places";
 import { describe, getRaster, paint, valueAt, type Raster } from "./raster";
+import { cellsWithin, summarise, SUMMARY_LAYERS, type AreaSummary, type Loaded, type SummaryLayerId } from "./summary";
 import type { Atlas, AtlasLayer } from "./types";
 
 // Street map: OpenFreeMap's vector tiles (OpenStreetMap data, no key). The research layer goes in under the
@@ -21,6 +23,20 @@ const BLANK = (dark: boolean): StyleSpecification => ({
 });
 const DATA = "atlas-data";
 const RELIEF = "atlas-relief";
+const FOCUS = "atlas-focus";            // the circle around a searched place or tapped spot
+const RADIUS_M = 500;
+
+/** A circle of radius r metres around a point, as GeoJSON (good to a metre at this size). */
+function circle(lat: number, lon: number, r: number): GeoJSON.Feature<GeoJSON.Polygon> {
+  const dLat = r / 111320, dLon = r / (111320 * Math.cos((lat * Math.PI) / 180));
+  const ring = Array.from({ length: 65 }, (_, i) => {
+    const a = (i / 64) * 2 * Math.PI;
+    return [lon + dLon * Math.cos(a), lat + dLat * Math.sin(a)];
+  });
+  return { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [ring] } };
+}
+
+type SummaryState = { state: "loading" } | { state: "error"; message: string } | { state: "ready"; data: AreaSummary };
 
 type MapLibre = typeof import("maplibre-gl");
 
@@ -124,6 +140,12 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
   const geo = useMemo(() => gridGeo(atlas.grid, h, w), [atlas.grid, h, w]);
   const placesLoad = usePlaces();
   const places: Place[] = placesLoad.state === "ready" ? placesLoad.data.places : [];
+  const [focus, setFocus] = useState<Focus | null>(null);
+  const [summary, setSummary] = useState<SummaryState>({ state: "loading" });
+  const [locating, setLocating] = useState(false);
+  const card = useRef<HTMLDivElement>(null);
+  // can this atlas be summarised? only with layers as data (an older atlas.json has pictures only)
+  const summarisable = atlas.layers.some((l) => l.values && (SUMMARY_LAYERS as readonly string[]).includes(l.id));
 
   // the map, once
   useEffect(() => {
@@ -220,7 +242,7 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
       m.addLayer({
         id: DATA, type: "raster", source: DATA,
         paint: { "raster-opacity": opacity, "raster-resampling": "nearest", "raster-fade-duration": 0 },
-      }, aboveBasemap(m));
+      }, m.getLayer(`${FOCUS}-fill`) ? `${FOCUS}-fill` : aboveBasemap(m));
     };
     setStatus({ state: "loading" });
     if (layer.values) {
@@ -247,6 +269,68 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
     const m = map.current;
     if (m?.style && m.getLayer(DATA)) m.setPaintProperty(DATA, "raster-opacity", opacity);
   }, [opacity, status]);
+
+  // the circle around the focus, over the data layer and under the labels
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !styleGen || !focus) return;
+    m.addSource(FOCUS, { type: "geojson", data: circle(focus.lat, focus.lon, RADIUS_M) });
+    const before = aboveBasemap(m);
+    m.addLayer({ id: `${FOCUS}-fill`, type: "fill", source: FOCUS, paint: { "fill-color": "#ffffff", "fill-opacity": 0.12 } }, before);
+    m.addLayer({ id: `${FOCUS}-line`, type: "line", source: FOCUS, paint: { "line-color": dark ? "#ffffff" : "#14161a", "line-width": 2.5, "line-dasharray": [2, 1.5] } }, before);
+    return () => {
+      if (!m.style) return;
+      for (const id of [`${FOCUS}-line`, `${FOCUS}-fill`]) if (m.getLayer(id)) m.removeLayer(id);
+      if (m.getSource(FOCUS)) m.removeSource(FOCUS);
+    };
+  }, [focus, styleGen, dark]);
+
+  // the summary for the focus: read the layers it needs (each once per visit) and sum up the circle
+  useEffect(() => {
+    if (!focus) return;
+    let live = true;
+    setSummary({ state: "loading" });
+    const wanted = atlas.layers.filter((l): l is typeof l & { id: SummaryLayerId } =>
+      Boolean(l.values) && (SUMMARY_LAYERS as readonly string[]).includes(l.id));
+    Promise.all(wanted.map((l) => getRaster(atlasUrl(l.src)).then((raster) => [l.id, { layer: l, raster }] as const)))
+      .then((pairs) => {
+        if (!live) return;
+        const loaded: Partial<Record<SummaryLayerId, Loaded>> = {};
+        for (const [id, x] of pairs) if (x.raster.width === w && x.raster.height === h) loaded[id] = x;
+        const cells = cellsWithin(geo.cellAt(focus.lat, focus.lon), RADIUS_M, atlas.grid.pixel, w, h);
+        setSummary({ state: "ready", data: summarise(loaded, cells) });
+      })
+      .catch((err: unknown) => live && setSummary({ state: "error", message: err instanceof Error ? err.message : String(err) }));
+    return () => {
+      live = false;
+    };
+  }, [focus, atlas.layers, atlas.grid.pixel, geo, h, w]);
+
+  const goTo = (f: Focus, fly: boolean) => {
+    setFocus(f);
+    popup.current?.remove();
+    const m = map.current;
+    const wide = window.matchMedia("(min-width: 861px)").matches;
+    if (m && fly) {
+      m.flyTo({ center: [f.lon, f.lat], zoom: Math.max(m.getZoom(), 13.5), padding: { top: 0, bottom: 0, left: 0, right: wide ? 380 : 0 },
+        essential: true, duration: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1600 });
+    }
+    if (!wide) window.setTimeout(() => card.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
+  };
+
+  const locate = () => {
+    if (!("geolocation" in navigator)) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setLocating(false);
+        const near = nearest(places, coords.latitude, coords.longitude);
+        goTo({ lat: coords.latitude, lon: coords.longitude, name: "Your location", context: near ? `near ${near.place.name}` : null }, true);
+      },
+      () => setLocating(false),
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 600000 },
+    );
+  };
 
   // what is under the cursor (hover) or the finger (tap)
   useEffect(() => {
@@ -284,6 +368,17 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
       where.className = "where";
       where.textContent = [r.near, formatLatLon(lat, lng)].filter(Boolean).join(" · ");
       box.append(head, value, where);
+      if (summarisable && r.inside) {
+        const more = document.createElement("button");
+        more.type = "button";
+        more.className = "btn readout-more";
+        more.textContent = `Summarise this area (${RADIUS_M} m)`;
+        more.onclick = () => {
+          const n = nearest(places, lat, lng);
+          goTo({ lat, lon: lng, name: null, context: n ? `${n.km < 0.5 ? "in" : "near"} ${n.place.name}` : null }, false);
+        };
+        box.append(more);
+      }
       popup.current?.remove();
       popup.current = new lib.Popup({ maxWidth: "260px", focusAfterOpen: false }).setLngLat(e.lngLat).setDOMContent(box).addTo(m);
     };
@@ -295,11 +390,14 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
       m.off("mouseout", out);
       m.off("click", click);
     };
-  }, [ready, geo, places, h, w]);
+  }, [ready, geo, places, h, w, summarisable]);
 
   const groups = [...new Set(atlas.layers.map((l) => l.group))];
   return (
     <section className="card mapcard" ref={ref} aria-label="Interactive map" id="map">
+      {summarisable && (
+        <PlaceSearch places={places} onPick={(f) => goTo(f, true)} onLocate={"geolocation" in navigator ? locate : undefined} locating={locating} />
+      )}
       <div className="layers" role="radiogroup" aria-label="Map layer">
         {groups.map((g) => (
           <div className="layer-group" key={g}>
@@ -341,6 +439,11 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
             </div>
           )}
         </div>
+        {focus && (
+          <div className="place-card-wrap" ref={card}>
+            <PlaceCard focus={focus} summary={summary} firstYear={atlas.years[0]} radiusM={RADIUS_M} onClose={() => setFocus(null)} />
+          </div>
+        )}
         <p className="caption">
           {layer?.caption}{" "}
           <span className="muted">

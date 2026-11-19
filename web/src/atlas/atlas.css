@@ -40,7 +40,7 @@
 .layer:has(input:checked) { background: var(--ink); color: var(--surface); font-weight: 600; }
 .layer:has(input:checked)::before { background: var(--accent); border-color: var(--accent); }
 .layer:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 1px; }
-.mapcol { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-width: 0; }
+.mapcol { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-width: 0; position: relative; }
 .mapwrap { position: relative; }
 .map { height: clamp(420px, 68vh, 760px); background: #d4d5cf; }
 :root[data-theme="dark"] .map { background: #2a2c2b; }
@@ -152,3 +152,48 @@ ul.find li::marker { color: var(--accent); }
 .to3d:hover { border-color: var(--line-strong); }
 .to3d b { font-size: 15px; }
 .to3d .muted { font-size: 13px; }
+
+/* find your area: search row across the top of the map card */
+.map-search {
+  grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 20px;
+  padding: 14px 16px; border-bottom: 1px solid var(--line); background: var(--surface-2);
+}
+.search-label { display: grid; gap: 2px; }
+.search-hint { font-size: 14px; color: var(--ink-2); }
+.search-row .btn { white-space: nowrap; }
+.search-row { display: flex; gap: 8px; align-items: center; flex: 1 1 380px; max-width: 620px; min-width: 0; }
+.search-box { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--surface); color: var(--muted); }
+.search-box:focus-within { border-color: var(--focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 20%, transparent); }
+.search-box input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: var(--ink); font: 15px var(--f-sans); padding: 11px 0; }
+.search-list {
+  position: absolute; z-index: 600; left: -1px; right: -1px; top: calc(100% + 6px); margin: 0; padding: 6px; list-style: none;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); max-height: 320px; overflow: auto;
+}
+.search-list li { display: grid; gap: 1px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+.search-list li b { color: var(--ink); font-weight: 600; font-size: 14px; }
+.search-list li span { color: var(--muted); font-size: 12.5px; }
+.search-list li[aria-selected="true"] { background: var(--surface-2); }
+.search-list.empty { padding: 12px 14px; font-size: 13.5px; color: var(--ink-2); }
+
+/* the summary card: over the right of the map on wide screens, under it on phones */
+.place-card-wrap { position: absolute; z-index: 520; top: 12px; right: 56px; width: min(340px, calc(100% - 120px)); max-height: calc(clamp(420px, 68vh, 760px) - 150px); overflow: auto; border-radius: 16px; }
+.place-card {
+  display: grid; gap: 12px; padding: 16px 16px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow);
+}
+.place-card header { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+.place-card h3 { margin: 0; font-size: 20px; letter-spacing: -0.01em; }
+.place-card header .muted { font-size: 13px; }
+.place-card .close { border: 0; background: var(--surface-2); color: var(--ink-2); width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; flex: none; }
+.place-card dl { margin: 0; display: grid; gap: 10px; }
+.fact-line { display: grid; gap: 2px; padding-left: 10px; border-left: 3px solid var(--line-strong); }
+.fact-line.t-hot { border-left-color: var(--hot); }
+.fact-line.t-cool { border-left-color: var(--cool); }
+.fact-line dt { font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.fact-line dd { margin: 0; font-size: 14px; line-height: 1.45; color: var(--ink); }
+.place-card .fine { margin: 0; font-size: 12px; }
+.readout-more { margin-top: 6px; padding: 6px 10px; font-size: 12.5px; justify-self: start; }
+@media (max-width: 860px) {
+  .place-card-wrap { position: static; width: auto; max-height: none; overflow: visible; padding: 12px; border-radius: 0; border-top: 1px solid var(--line); }
+  .place-card { box-shadow: none; }
+  .map-search { padding: 12px; }
+}
