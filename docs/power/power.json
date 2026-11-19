@@ -3,12 +3,13 @@
  "log_rows": 0,
  "radius_m": 500,
  "near_logged_km": 1.0,
+ "hours_per_cut_day": null,
  "areas": [],
  "model": {
   "chosen": "average",
   "used": false,
   "areas": 0,
-  "loo_mae_hours_week": {}
+  "loo_mae_cut_days_week": {}
  },
  "estimates": [],
  "planned": []

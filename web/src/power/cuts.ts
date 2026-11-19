@@ -6,15 +6,16 @@ export interface LoggedArea {
   name: string;
   lat: number;
   lon: number;
-  days: number;
-  zero_days: number;
-  /** "diary": days without cuts were logged too, so hours_week is a rate; "reported only": cuts only. */
-  rate: "diary" | "reported only";
-  hours_week: number;
-  cuts_week: number | null;
-  cut_days: Record<string, number>;
+  /** "sampled": watched over a declared period, unreported days counted as power on; "reports only": no period. */
+  basis: "sampled" | "reports only";
   first: string;
   last: string;
+  days: number;
+  cut_days: number;
+  cut_days_week: number;
+  /** Only when every reported cut day said how long it lasted. */
+  hours_week: number | null;
+  kinds: Record<string, number>;
   sources: string[];
 }
 
@@ -22,10 +23,12 @@ export interface PowerData {
   generated: string;
   log_rows: number;
   near_logged_km: number;
+  /** Typical length of a reported cut day, hours (from the reports that give one). */
+  hours_per_cut_day: number | null;
   areas: LoggedArea[];
-  model: { chosen: string; used: boolean; areas: number; loo_mae_hours_week: Record<string, number> };
-  estimates: { name: string; lat: number; lon: number; hours_week: number }[];
-  planned: { area: string; lat: number; lon: number; date: string; start: string; end: string; hours: number; source: string }[];
+  model: { chosen: string; used: boolean; areas: number; loo_mae_cut_days_week: Record<string, number> };
+  estimates: { name: string; lat: number; lon: number; cut_days_week: number }[];
+  planned: { area: string; lat: number; lon: number; date: string; start: string; end: string; hours: number | null; source: string }[];
 }
 
 /** The power data, or null when there is none yet (the atlas then says nothing about power cuts). */
@@ -52,21 +55,31 @@ const ESTIMATE_WITHIN_KM = 2;
 
 export type CutsHere =
   | { kind: "logged"; area: LoggedArea; km: number }
-  | { kind: "estimate"; place: string; km: number; hoursWeek: number; model: string; errorHours: number; areas: number }
+  | { kind: "estimate"; place: string; km: number; cutDaysWeek: number; model: string; errorDays: number; areas: number }
   | { kind: "none"; nearest: { area: LoggedArea; km: number } | null };
 
-/** What the power data says about a point: a logged area close by, else the model's estimate, else the nearest record. */
+/** What the power data says about a point: a watched area close by, else the model's estimate, else the nearest record. */
 export function cutsAt(d: PowerData, at: { lat: number; lon: number }): CutsHere {
   const logged = closest(d.areas, at);
   if (logged && logged.km <= d.near_logged_km) return { kind: "logged", area: logged.item, km: logged.km };
   const est = d.model.used ? closest(d.estimates, at) : null;
   if (est && est.km <= ESTIMATE_WITHIN_KM) {
     return {
-      kind: "estimate", place: est.item.name, km: est.km, hoursWeek: est.item.hours_week, model: d.model.chosen,
-      errorHours: d.model.loo_mae_hours_week[d.model.chosen] ?? NaN, areas: d.model.areas,
+      kind: "estimate", place: est.item.name, km: est.km, cutDaysWeek: est.item.cut_days_week, model: d.model.chosen,
+      errorDays: d.model.loo_mae_cut_days_week[d.model.chosen] ?? NaN, areas: d.model.areas,
     };
   }
   return { kind: "none", nearest: logged ? { area: logged.item, km: logged.km } : null };
+}
+
+/** Hours a week without power at a point, for the solar calculator: logged hours, else cut days x a typical cut day. */
+export function hoursAt(d: PowerData, c: CutsHere): number | null {
+  if (c.kind === "logged") {
+    if (c.area.basis !== "sampled") return null;
+    return c.area.hours_week ?? (d.hours_per_cut_day === null ? null : c.area.cut_days_week * d.hours_per_cut_day);
+  }
+  if (c.kind === "estimate") return d.hours_per_cut_day === null ? null : c.cutDaysWeek * d.hours_per_cut_day;
+  return null;
 }
 
 /** Planned cuts announced for areas within `withinKm`, from `today` (YYYY-MM-DD) on, soonest first. */
@@ -79,31 +92,46 @@ export function kampalaToday(now = new Date()): string {
   return new Date(now.getTime() + 3 * 3600 * 1000).toISOString().slice(0, 10);
 }
 
-const hrs = (h: number) => (h < 1 ? "under an hour" : `about ${h >= 10 ? Math.round(h) : h.toFixed(1)} hours`);
 const day = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+
+/** "about 3 days a week", "about one day every 2 weeks". */
+export function daysAWeek(d: number): string {
+  if (d >= 6.95) return "every day";
+  if (d >= 1) {
+    const n = d >= 3 ? Math.round(d) : Math.round(d * 2) / 2;
+    return n === 1 ? "about one day a week" : `about ${n} days a week`;
+  }
+  const weeks = Math.round(1 / d);
+  return weeks <= 1 ? "about one day a week" : `about one day every ${weeks} weeks`;
+}
 
 /** One plain sentence for the place card. */
 export function cutsSentence(c: CutsHere): { text: string; tone: "hot" | "neutral" } {
   if (c.kind === "logged") {
     const a = c.area;
     const where = c.km < 0.5 ? a.name : `${a.name} (${c.km.toFixed(1)} km away)`;
-    if (a.rate === "reported only") {
-      return { text: `${a.days} day${a.days === 1 ? "" : "s"} with cuts reported in ${where} between ${day(a.first)} and ${day(a.last)}. Days without cuts were not logged, so this is not a weekly rate.`, tone: "neutral" };
+    if (a.basis === "reports only") {
+      return { text: `Cuts reported in ${where} on ${a.cut_days} day${a.cut_days === 1 ? "" : "s"} between ${day(a.first)} and ${day(a.last)}. No watching period is recorded for this area, so this is not a weekly rate.`, tone: "neutral" };
     }
+    const from = a.sources.length ? `; from ${a.sources.join(", ")}` : "";
+    if (a.cut_days === 0) return { text: `No cuts reported in ${where} over the ${a.days} days it was watched (${day(a.first)} to ${day(a.last)}${from}).`, tone: "neutral" };
+    const hours = a.hours_week === null ? "" : ` About ${Math.round(a.hours_week)} hours a week in all.`;
     return {
-      text: `${hrs(a.hours_week)} a week without power in ${where}, from ${a.days} days logged (${day(a.first)} to ${day(a.last)}).`,
-      tone: a.hours_week >= 10 ? "hot" : "neutral",
+      text: `Power went off ${daysAWeek(a.cut_days_week)} in ${where}: cuts reported on ${a.cut_days} of ${a.days} days watched (${day(a.first)} to ${day(a.last)}${from}).${hours} Only reported cuts count, so the real figure may be higher.`,
+      tone: a.cut_days_week >= 2 ? "hot" : "neutral",
     };
   }
   if (c.kind === "estimate") {
-    const how = c.model === "nearest areas" ? "the nearest logged areas" : "logged areas that are built up in a similar way";
-    const err = Number.isFinite(c.errorHours) ? ` Estimates like this have been off by about ${Math.round(c.errorHours)} hours a week.` : "";
-    return { text: `Estimated ${hrs(c.hoursWeek)} a week without power, from ${how} (${c.areas} areas in the log).${err}`, tone: c.hoursWeek >= 10 ? "hot" : "neutral" };
+    const how = c.model === "nearest areas" ? "the nearest watched areas" : "watched areas that are built up in a similar way";
+    const err = Number.isFinite(c.errorDays) ? ` Estimates like this have been off by about ${c.errorDays < 1 ? "half a day" : `${Math.round(c.errorDays)} day${Math.round(c.errorDays) === 1 ? "" : "s"}`} a week.` : "";
+    return { text: `Estimated: power goes off ${daysAWeek(c.cutDaysWeek)}, judging from ${how} (${c.areas} areas).${err}`, tone: c.cutDaysWeek >= 2 ? "hot" : "neutral" };
   }
+  const n = c.nearest;
   return {
-    text: c.nearest
-      ? `No power-cut records near here yet. The nearest logged area, ${c.nearest.area.name} (${c.nearest.km.toFixed(0)} km away), ${c.nearest.area.rate === "diary" ? `has ${hrs(c.nearest.area.hours_week)} a week` : "has cuts reported but no weekly rate"}.`
-      : "No power-cut records near here yet.",
+    text: !n ? "No power-cut records near here yet."
+      : n.area.basis === "sampled"
+        ? `No power-cut records near here yet. In the nearest watched area, ${n.area.name} (${n.km.toFixed(0)} km away), power went off ${n.area.cut_days === 0 ? "on none of the days watched" : daysAWeek(n.area.cut_days_week)}.`
+        : `No power-cut records near here yet. The nearest area with reports is ${n.area.name} (${n.km.toFixed(0)} km away).`,
     tone: "neutral",
   };
 }

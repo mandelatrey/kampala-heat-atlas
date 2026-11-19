@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { getJson, useLoad } from "../data";
-import { cutsAt, cutsSentence, usePower, type PowerData } from "../power/cuts";
+import { cutsAt, cutsSentence, hoursAt, usePower, type PowerData } from "../power/cuts";
 import { monthlyBill, PRICES, solarResult, suggestedKwp, unitsForBill, type Building, type Tariffs } from "../power/solar";
 import { PlaceSearch } from "./PlaceCard";
 import { usePlaces } from "./places";
@@ -110,9 +110,11 @@ function Calculator({ t, yieldKwhPerKwp }: { t: Tariffs; yieldKwhPerKwp: number 
               <PlaceSearch places={places} title="Where is the building?" hint="Fills in power cuts from the atlas's power-cut log"
                 onPick={(f) => {
                   const c = cutsAt(power, f);
-                  const hours = c.kind === "logged" && c.area.rate === "diary" ? c.area.hours_week : c.kind === "estimate" ? c.hoursWeek : null;
+                  const hours = hoursAt(power, c);
                   if (hours !== null) setCuts(Math.min(70, Math.round(hours)));
-                  setCutsFrom(cutsSentence(c).text);
+                  const typical = power.hours_per_cut_day;
+                  setCutsFrom(`${cutsSentence(c).text}${hours !== null && typical !== null && !(c.kind === "logged" && c.area.hours_week !== null)
+                    ? ` Hours worked out at about ${typical} hours a cut day, the typical length in the log.` : hours === null ? " Set the hours yourself." : ""}`);
                 }} />
             </div>
           )}
