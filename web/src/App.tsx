@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { AtlasPage } from "./atlas/AtlasPage";
 import { Shell } from "./components/Shell";
+import { HeatPage } from "./heat/HeatPage";
 import { useRoute } from "./router";
 import { SiteList } from "./sites/SiteList";
 import { SitePage } from "./sites/SitePage";
@@ -14,6 +15,7 @@ export function App() {
     <Shell route={route}>
       {route.page === "atlas" && <AtlasPage section={route.section} />}
       {route.page === "3d" && <Suspense fallback={<p className="state">Loading the 3D model…</p>}><Viewer3D /></Suspense>}
+      {route.page === "heat" && <HeatPage key={route.slug ?? ""} slug={route.slug} />}
       {route.page === "sites" && <SiteList />}
       {route.page === "site" && <SitePage key={route.slug} slug={route.slug} />}
       {route.page === "missing" && (

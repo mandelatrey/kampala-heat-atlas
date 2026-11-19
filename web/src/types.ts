@@ -50,6 +50,23 @@ export interface Everyday {
   extras: string[];
 }
 
+/** Public heat advisory for one day (scripts/heat_advisory.py), from forecast WBGT in the sun. */
+export interface HeatAdvisory {
+  /** 0 Low, 1 Moderate, 2 High, 3 Very high, 4 Extreme */
+  level: 0 | 1 | 2 | 3 | 4;
+  name: string;
+  headline: string;
+  peak_wbgt: number | null;
+  peak_hour: number | null;
+  /** Hours at the day's level, e.g. "12-15 h" ("" on a Low day). */
+  window: string;
+  /** Hours at Moderate or above. */
+  risk_hours: string;
+  /** [hour, level] from 06:00. */
+  hours: [number, number][];
+  advice: { key: "workers" | "vendors" | "children" | "elderly"; who: string; text: string }[];
+}
+
 export interface DayFacts {
   rain_mm: number;
   rain_chance: number;
@@ -70,6 +87,8 @@ export interface DayBriefing {
   facts: DayFacts;
   /** Briefings written before the everyday advice was added have none. */
   everyday?: Everyday;
+  /** Briefings written before the heat advisory was added have none. */
+  heat?: HeatAdvisory;
 }
 
 /** <site>/site_briefing_latest.json */

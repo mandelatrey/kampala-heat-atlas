@@ -125,5 +125,26 @@
   "spray_hot_C": 30.0,
   "_spray_source": "pesticide-label practice: a rain-free period of about 6 h after spraying; spray in light wind (about 1-4 m/s at nozzle height; 10 m wind is higher) and avoid the heat of the day. The product label takes precedence",
   "uv_tip": 8
+ },
+ "heat_advisory": {
+  "_note": "Public heat advisory (scripts/heat_advisory.py): screening levels from forecast WBGT in the sun, not official warnings. Official heat warnings come from the national weather service (in Uganda, UNMA) and the health ministry.",
+  "hours": [
+   6,
+   20
+  ],
+  "levels": [
+   "Low",
+   "Moderate",
+   "High",
+   "Very high",
+   "Extreme"
+  ],
+  "wbgt_from_C": [
+   25.0,
+   28.0,
+   30.0,
+   32.0
+  ],
+  "_source": "WBGT in the sun. Moderate from 25 C (heat starts to limit hard work for people not used to it); High from 28 C, the ISO 7243 / ACGIH limit for continuous moderate work by acclimatised workers (the construction advice uses the same value); Very high from 30 C and Extreme from 32 C, as in common WBGT flag systems (e.g. the US heat categories: red about 31, black about 32 C), where work-rest cycles and then stopping strenuous activity are advised"
  }
 }

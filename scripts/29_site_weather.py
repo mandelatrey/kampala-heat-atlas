@@ -19,7 +19,8 @@ Per site (<out>/<slug>/):
   archive/monthly/YYYY-MM.md                 month summary vs normal, for programme and claim records
   index.html                                 the page
 Each day of the briefing also carries "everyday": go / with care / stop by hour for daily activities (travel,
-events, laundry, children outside, farming), from scripts/everyday.py and thresholds.json -> "everyday".
+events, laundry, children outside, farming), from scripts/everyday.py and thresholds.json -> "everyday", and
+"heat": the public heat advisory (level Low to Extreme, its hours, advice by group), from scripts/heat_advisory.py.
 
 Methods (screening level, documented so a reviewer can check them):
   WBGT     0.7 Tnw + 0.2 Tg + 0.1 Ta; Tg from mean radiant temperature (radiant budget as in
@@ -278,6 +279,7 @@ CLIM = climatology()
 sys.path.insert(0, str(Path(__file__).parent))
 import meteogram_site  # noqa: E402
 import everyday  # noqa: E402  (everyday advice for the public, from the same forecast)
+import heat_advisory  # noqa: E402  (public heat advisory, from the same WBGT)
 
 _sites = json.loads((OUT / "sites.json").read_text())["sites"] if (OUT / "sites.json").exists() else []
 meteogram_site.build(fc, dict(name=A.name, short=A.name.replace("Central ", ""), lat=A.lat, lon=A.lon, alt=A.alt,
@@ -386,6 +388,8 @@ def briefing(d, g):
         extras.append("Midday outdoor-work ban in force (12:00-15:00): those hours are excluded from the working day.")
     storm = "likely" if stl else "possible" if stp else "low"
     pub = dict(everyday=everyday.day(g, TH["everyday"], aq)) if "everyday" in TH else {}
+    if "heat_advisory" in TH:
+        pub["heat"] = heat_advisory.day(g, TH["heat_advisory"])
     return dict(date=f"{d:%Y-%m-%d}", day=f"{d:%A %d %B}", headline=head, rows=rows, extras=extras, **pub,
                 facts=dict(rain_mm=round(rain, 1), rain_chance=int(g.precipitation_probability.max()), storm=storm,
                            storm_from=(stl or stp or [""])[0][:2], wbgt_peak=round(float(g.wbgt_sun.max()), 1),

@@ -33,6 +33,7 @@ const groups = (mode: Mode): { title: string; links: Link[] }[] => [
   {
     title: "Site weather",
     links: [
+      { label: "Heat today", href: "#/heat", active: (r) => r.page === "heat" },
       { label: "All sites", href: "#/site-weather", active: (r) => r.page === "sites" || r.page === "site" },
       { label: "Map", href: dataUrl("site-weather/map.html"), external: true },
       { label: "Share today", href: dataUrl("site-weather/share.html"), external: true },

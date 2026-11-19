@@ -6,6 +6,7 @@ export type Route =
   | { page: "3d" }
   | { page: "sites" }
   | { page: "site"; slug: string }
+  | { page: "heat"; slug?: string }
   | { page: "missing"; path: string };
 
 const NAME = /^[a-z0-9-]+$/;
@@ -16,6 +17,7 @@ export function parseRoute(hash: string): Route {
     if (first === undefined) return { page: "atlas" };
     if (first === "atlas") return second === undefined ? { page: "atlas" } : NAME.test(second) ? { page: "atlas", section: second } : { page: "missing", path: hash };
     if (first === "3d" && second === undefined) return { page: "3d" };
+    if (first === "heat") return second === undefined ? { page: "heat" } : NAME.test(second) ? { page: "heat", slug: second } : { page: "missing", path: hash };
     if (first === "site-weather") return second === undefined ? { page: "sites" } : NAME.test(second) ? { page: "site", slug: second } : { page: "missing", path: hash };
   }
   return { page: "missing", path: hash };

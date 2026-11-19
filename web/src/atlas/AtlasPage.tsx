@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { GlossaryList, Term } from "../components/Term";
 import { Icon } from "../components/ui";
+import { HeatStrip } from "../heat/HeatStrip";
 import { useMode, type Mode } from "../mode";
 import { AtlasMap } from "./AtlasMap";
 import { LandcoverChart, LczChart, SolarChart, TrajectoryChart, TreesChart, WindRose } from "./charts";
@@ -153,6 +154,8 @@ function Content({ atlas: rawAtlas, stats, mapRef }: { atlas: Atlas; stats: Stat
           </aside>
         )}
       </header>
+
+      <HeatStrip />
 
       <section className="card facts" aria-label="Headline findings">
         {facts.map((f) => (

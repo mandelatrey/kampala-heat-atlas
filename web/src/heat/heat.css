@@ -1,0 +1,59 @@
+/* Heat today (HeatPage.tsx). Level colours match LEVEL_COLOURS in share.ts. */
+.lv-0 { --lv: #2f8f3a; } .lv-1 { --lv: #e0a526; } .lv-2 { --lv: #eb6834; } .lv-3 { --lv: #c23434; } .lv-4 { --lv: #6b1d5c; }
+
+.heat-top { display: flex; align-items: end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.town-pick { display: grid; gap: 4px; }
+.town-pick select {
+  font: 500 15px var(--f-sans); color: var(--ink); background: var(--surface); border: 1px solid var(--line-strong);
+  border-radius: 12px; padding: 9px 12px; min-width: 220px;
+}
+.heat-days { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+.heat-days button {
+  display: grid; justify-items: center; gap: 2px; min-width: 76px; padding: 8px 10px; border-radius: 14px; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--line); color: var(--ink-2); font: 13px var(--f-sans);
+}
+.heat-days button[aria-pressed="true"] { border-color: var(--ink); color: var(--ink); box-shadow: var(--shadow); }
+.heat-days b { color: var(--ink); font-size: 14px; }
+.heat-days small { font-size: 12px; }
+.heat-days .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--lv); }
+
+.heat-hero { border-radius: var(--radius); padding: 26px 28px 24px; display: grid; gap: 8px; box-shadow: var(--shadow); }
+.heat-hero .eyebrow { color: inherit; opacity: .85; }
+.heat-level { margin: 0; font-size: clamp(56px, 11vw, 104px); font-weight: 800; line-height: .95; letter-spacing: -0.03em; }
+.heat-when { margin: 0; font-size: 20px; font-weight: 600; }
+.heat-head { margin: 4px 0 0; font-size: 18px; line-height: 1.45; max-width: 60ch; }
+.heat-sub { margin: 0; font-size: 14px; opacity: .9; }
+.heat-hero .term-word { text-decoration-color: currentColor; }
+
+.heat-hours { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); grid-auto-flow: column; gap: 4px; }
+.hh { display: grid; gap: 4px; justify-items: center; }
+.hh i { width: 100%; height: 34px; border-radius: 6px; background: var(--lv); }
+.hh small { font: 500 11px var(--f-mono); color: var(--muted); min-height: 13px; }
+.heat-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--ink-2); }
+.heat-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.heat-legend i { width: 12px; height: 12px; border-radius: 3px; background: var(--lv); }
+
+.heat-advice { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.advice { display: grid; gap: 6px; align-content: start; }
+.advice h3 { margin: 0; font-size: 15px; }
+.advice p { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--ink-2); }
+.advice-icon { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--surface-2); color: var(--ink); }
+.signs { display: flex; gap: 12px; align-items: start; border-color: var(--critical-bg); }
+.signs svg { flex: none; color: var(--critical); margin-top: 2px; }
+.signs p { margin: 0; font-size: 14.5px; line-height: 1.5; }
+.heat-share { display: grid; gap: 12px; }
+.share-text {
+  margin: 0; white-space: pre-wrap; font: 13.5px/1.5 var(--f-sans); color: var(--ink-2); background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; max-height: 260px; overflow: auto;
+}
+
+/* the strip on the atlas home page */
+.heat-strip {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 14px; text-decoration: none;
+  background: var(--surface); border: 1px solid var(--line); color: var(--ink);
+}
+.heat-strip:hover { border-color: var(--line-strong); }
+.heat-strip .pill-lv { padding: 4px 12px; border-radius: 999px; font-weight: 700; font-size: 14px; background: var(--lv); color: #fff; flex: none; }
+.heat-strip.lv-1 .pill-lv { color: #1b1b1f; }
+.heat-strip span.txt { font-size: 14px; color: var(--ink-2); flex: 1; }
+.heat-strip svg { flex: none; }
