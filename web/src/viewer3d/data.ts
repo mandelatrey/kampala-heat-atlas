@@ -21,12 +21,4 @@ export function useDistrict(file: string | undefined): Load<DistrictData> {
   });
 }
 
-/** Whether this browser can start WebGL 2, which deck.gl 9 needs. */
-export function canUseWebGL2(): boolean {
-  try {
-    const canvas = document.createElement("canvas");
-    return Boolean(canvas.getContext("webgl2"));
-  } catch {
-    return false;
-  }
-}
+export { canUseWebGL2 } from "../atlas/mapEngine";

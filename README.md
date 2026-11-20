@@ -66,7 +66,9 @@ The atlas draws everything from data rather than from pictures:
 - **Map layers** are Cloud-Optimized GeoTIFFs (`docs/atlas/layers/*.tif`, written by `scripts/14_atlas.py` through
   `src/kampala/weblayers.py`). The page colours them itself with the palette listed in `atlas.json`, reads the value
   under the cursor or a tap, and offers each file for download (they open in QGIS with real values and units). The
-  street map underneath is OpenFreeMap (OpenStreetMap data, no API key), drawn with MapLibre GL.
+  street map underneath is OpenFreeMap (OpenStreetMap data, no API key), drawn with MapLibre GL. Browsers that
+  cannot run WebGL 2 (WebGL turned off, privacy-hardened browsers, older and budget phones whose graphics stop at
+  OpenGL ES 2) get the same map drawn with Leaflet over Esri's grey canvas tiles instead (`web/src/atlas/mapEngine.ts`).
 - **Numbers and charts** come from `docs/atlas/stats.json`, which `scripts/14c_atlas_stats.py` computes from the result
   tables in `outputs/tables/`. It needs no rasters, so it runs anywhere; it also copies each chart's table into
   `docs/atlas/tables/`, and the page links every chart to its table. On the author's machine it also refreshes two

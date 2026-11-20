@@ -1,12 +1,9 @@
-import "maplibre-gl/dist/maplibre-gl.css";
-// MapLibre finds its worker next to its own file, which Vite moves; build the worker and say where it is
-import mapWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
-import type { ImageSource, Map as MlMap, MapMouseEvent, Popup, StyleSpecification } from "maplibre-gl";
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../components/ui";
 import { useIsDark } from "../theme";
 import { atlasUrl } from "./data";
 import { formatLatLon, gridGeo } from "./geo";
+import { createMapEngine, type MapEngine } from "./mapEngine";
 import { PlaceCard, PlaceSearch, type Focus } from "./PlaceCard";
 import { onFocusRequest } from "./focus";
 import { nearest, usePlaces, type Place } from "./places";
@@ -15,32 +12,9 @@ import { splitImage, yearSeries } from "./series";
 import { cellsWithin, summarise, SUMMARY_LAYERS, type AreaSummary, type Loaded, type SummaryLayerId } from "./summary";
 import type { Atlas, AtlasLayer } from "./types";
 
-// Street map: OpenFreeMap's vector tiles (OpenStreetMap data, no key). The research layer goes in under the
-// first label layer, so place and road names stay readable on top of it. MapLibre loads with the map, not the page.
-const STYLE = (dark: boolean) => `https://tiles.openfreemap.org/styles/${dark ? "dark" : "positron"}`;
-/** A plain background, used when the street map cannot load, so the research layer still shows. */
-const BLANK = (dark: boolean): StyleSpecification => ({
-  version: 8, sources: {},
-  layers: [{ id: "background", type: "background", paint: { "background-color": dark ? "#2a2c2b" : "#d4d5cf" } }],
-});
-const DATA = "atlas-data";
-const RELIEF = "atlas-relief";
-const FOCUS = "atlas-focus";            // the circle around a searched place or tapped spot
 const RADIUS_M = 500;
 
-/** A circle of radius r metres around a point, as GeoJSON (good to a metre at this size). */
-function circle(lat: number, lon: number, r: number): GeoJSON.Feature<GeoJSON.Polygon> {
-  const dLat = r / 111320, dLon = r / (111320 * Math.cos((lat * Math.PI) / 180));
-  const ring = Array.from({ length: 65 }, (_, i) => {
-    const a = (i / 64) * 2 * Math.PI;
-    return [lon + dLon * Math.cos(a), lat + dLat * Math.sin(a)];
-  });
-  return { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [ring] } };
-}
-
 type SummaryState = { state: "loading" } | { state: "error"; message: string } | { state: "ready"; data: AreaSummary };
-
-type MapLibre = typeof import("maplibre-gl");
 
 function Legend({ layer }: { layer: AtlasLayer }) {
   const s = layer.style;
@@ -82,54 +56,6 @@ interface Shown {
   image: ImageData;
 }
 
-/**
- * Where research layers go: just above the street map's last non-label layer, so roads and areas sit under the
- * data and every label sits on top (some styles put a few labels early; those end up under the data).
- */
-function aboveBasemap(m: MlMap): string | undefined {
-  const layers = m.getStyle().layers;
-  let last = -1;
-  layers.forEach((l, i) => {
-    if (l.type !== "symbol" && !l.id.startsWith("atlas-")) last = i;
-  });
-  return layers.slice(last + 1).find((l) => !l.id.startsWith("atlas-"))?.id;
-}
-
-/** Labels that stay readable over a coloured layer: the dark style's grey labels get light text on a dark halo. */
-function strengthenLabels(m: MlMap, dark: boolean) {
-  if (!dark) return;
-  for (const l of m.getStyle().layers) {
-    if (l.type !== "symbol" || !m.getLayoutProperty(l.id, "text-field")) continue;
-    m.setPaintProperty(l.id, "text-color", "#f1f2f4");
-    m.setPaintProperty(l.id, "text-halo-color", "rgba(10, 11, 13, 0.9)");
-    m.setPaintProperty(l.id, "text-halo-width", 1.6);
-  }
-}
-
-/**
- * Put a picture in the data layer: swap the image in place when the layer exists (no flash between years),
- * otherwise add it under the focus circle and the labels.
- */
-function showData(m: MlMap, corners: ImageSource["coordinates"], src: { image: ImageData } | { url: string }, opacity: number) {
-  const existing = m.getSource(DATA) as ImageSource | undefined;
-  if (existing) {
-    existing.updateImage({ ...src, coordinates: corners });
-    return;
-  }
-  m.addSource(DATA, { type: "image", coordinates: corners, ...("url" in src ? { url: src.url } : {}) });
-  if ("image" in src) (m.getSource(DATA) as ImageSource).updateImage({ image: src.image });
-  m.addLayer({
-    id: DATA, type: "raster", source: DATA,
-    paint: { "raster-opacity": opacity, "raster-resampling": "nearest", "raster-fade-duration": 0 },
-  }, m.getLayer(`${FOCUS}-fill`) ? `${FOCUS}-fill` : aboveBasemap(m));
-}
-
-function removeLayer(m: MlMap, id: string) {
-  if (!m.style) return;                        // the map is gone or between styles
-  if (m.getLayer(id)) m.removeLayer(id);
-  if (m.getSource(id)) m.removeSource(id);
-}
-
 interface Props {
   atlas: Atlas;
   layerId: string;
@@ -144,14 +70,11 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
   const [relief, setRelief] = useState(false);
   const [status, setStatus] = useState<Status>({ state: "loading" });
   const [cursor, setCursor] = useState<string | null>(null);
-  const [basemapNote, setBasemapNote] = useState<string | null>(null);   // why the street map is missing
-  const blank = useRef(false);                                           // showing BLANK instead of the street map
-  const [styleGen, setStyleGen] = useState(0);         // bumps on every style load: layers are re-added then
-  const ready = styleGen > 0;
+  const [basemapNote, setBasemapNote] = useState<{ why: string; hint: string } | null>(null);   // street map missing
   const mapEl = useRef<HTMLDivElement>(null);
-  const map = useRef<MlMap | null>(null);
-  const ml = useRef<MapLibre | null>(null);
-  const popup = useRef<Popup | null>(null);
+  const [engine, setEngine] = useState<MapEngine | null>(null);   // MapLibre, or Leaflet without WebGL
+  const engineNow = useRef(engine);
+  engineNow.current = engine;
   const shown = useRef<Shown | null>(null);           // the selected layer as drawn
   const sides = useRef<{ left: Shown; right: Shown } | null>(null);   // comparing: earliest year | selected year
   const splitCol = useRef<number | null>(null);        // comparing: the grid column under the divider
@@ -181,100 +104,55 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
   // can this atlas be summarised? only with layers as data (an older atlas.json has pictures only)
   const summarisable = atlas.layers.some((l) => l.values && (SUMMARY_LAYERS as readonly string[]).includes(l.id));
 
-  // the map, once
+  // the map, once: MapLibre where WebGL 2 runs, else Leaflet
   useEffect(() => {
     const el = mapEl.current;
     if (!el) return;
-    let m: MlMap | null = null;
-    let cancelled = false;
-    let started = false;
-    const fail = (why: string, err?: unknown) => {
-      const detail = err instanceof Error ? err.message : err ? String(err) : "";
-      console.error("map:", why, err);
-      if (!cancelled) setStatus({ state: "error", message: detail ? `${why}: ${detail}` : why });
-    };
-    // no street map (blocked, offline, worker trouble): carry on with a plain background and say why
-    const withoutStreets = (why: string, err?: unknown) => {
-      if (cancelled || blank.current || !m) return;
-      console.warn("map: street map unavailable:", why, err);
-      blank.current = true;
-      setBasemapNote(why);
-      m.setStyle(BLANK(darkNow.current), { diff: false });
-    };
-    const slow = window.setTimeout(() => {
-      if (!started) withoutStreets("it did not load within 15 s");
-    }, 15000);
-    import("maplibre-gl").then((lib) => {
-      if (cancelled) return;
-      try {
-        lib.setWorkerUrl(mapWorkerUrl);
-        const [[s, wst], [n, e]] = geo.bounds;
-        const pad = 0.3 * Math.max(n - s, e - wst);
-        m = new lib.Map({
-          container: el, style: STYLE(darkNow.current),
-          bounds: [[wst, s], [e, n]], fitBoundsOptions: { padding: 16 },
-          maxBounds: [[wst - pad, s - pad], [e + pad, n + pad]], minZoom: 8, maxZoom: 17.5,
-          dragRotate: false, pitchWithRotate: false, touchPitch: false,
-          cooperativeGestures: true,       // page scroll stays page scroll: Ctrl + scroll, or two fingers on a phone
-          attributionControl: { compact: true },
-        });
-      } catch (err) {
-        return fail("the map could not start (it needs WebGL)", err);
-      }
-      const mm = m;
-      mm.touchZoomRotate.disableRotation();
-      mm.addControl(new lib.NavigationControl({ showCompass: false }), "top-right");
-      mm.addControl(new lib.ScaleControl({ unit: "metric", maxWidth: 110 }), "top-left");
-      mm.on("style.load", () => {
-        started = true;
-        strengthenLabels(mm, darkNow.current);
-        setStyleGen((g) => g + 1);
-      });
-      mm.on("error", (ev) => {
-        // before the street map has loaded, an error means it will not (worker, style or network)
-        if (!started && !blank.current) withoutStreets(ev.error?.message ?? "it could not be fetched", ev.error);
-        else console.warn("map:", ev.error?.message ?? ev);
-      });
-      ml.current = lib;
-      map.current = mm;
-    }, (err: unknown) => fail("the map code could not load", err));
+    let made: MapEngine | null = null;
+    const stop = new AbortController();
+    createMapEngine(el, {
+      bounds: geo.bounds, corners: geo.corners, dark: darkNow.current, opacity: opacityNow.current,
+      onBasemapMissing: (why, hint) => !stop.signal.aborted && setBasemapNote({ why, hint }),
+    }, stop.signal).then((m) => {
+      if (!m) return;
+      made = m;
+      setEngine(m);
+    }, (err: unknown) => {
+      console.error("map: could not start", err);
+      if (!stop.signal.aborted) setStatus({ state: "error", message: `the map could not start: ${err instanceof Error ? err.message : String(err)}` });
+    });
     return () => {
-      cancelled = true;
-      window.clearTimeout(slow);
-      m?.remove();
-      map.current = null;
+      stop.abort();
+      made?.remove();
+      setEngine(null);
     };
   }, [geo]);
 
   // light or dark street map with the page
   useEffect(() => {
-    if (darkNow.current === dark) return;
     darkNow.current = dark;
-    map.current?.setStyle(blank.current ? BLANK(dark) : STYLE(dark), { diff: false });
-  }, [dark]);
+    engine?.setDark(dark);
+  }, [dark, engine]);
 
   // optional relief shading, under the data layer
   useEffect(() => {
-    const m = map.current;
-    if (!m || !styleGen || !relief) return;
-    m.addSource(RELIEF, { type: "image", url: new URL(atlasUrl(atlas.base), location.href).href, coordinates: geo.corners });
-    m.addLayer({ id: RELIEF, type: "raster", source: RELIEF, paint: { "raster-opacity": 0.4, "raster-fade-duration": 0 } },
-      m.getLayer(DATA) ? DATA : aboveBasemap(m));
-    return () => removeLayer(m, RELIEF);
-  }, [relief, styleGen, atlas.base, geo]);
+    if (!engine || !relief) return;
+    engine.setRelief(new URL(atlasUrl(atlas.base), location.href).href);
+    return () => engine.setRelief(null);
+  }, [relief, engine, atlas.base]);
 
   // the selected layer (with the earliest year beside it when comparing): drawn from its data, or the older
   // ready-coloured image; swapped in place, so stepping through the years does not flash
   useEffect(() => {
-    const m = map.current;
-    if (!m || !styleGen || !layer) return;
+    const m = engine;
+    if (!m || !layer) return;
     let live = true;
     shown.current = null;
     sides.current = null;
-    popup.current?.remove();
+    m.closePopup();
     setStatus({ state: "loading" });
     if (!layer.values) {
-      showData(m, geo.corners, { url: new URL(atlasUrl(layer.src), location.href).href }, opacityNow.current);
+      m.setData({ url: new URL(atlasUrl(layer.src), location.href).href });
       setStatus({ state: "idle" });
       return () => {
         live = false;
@@ -283,26 +161,26 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
     const wanted = before?.layer.values ? [before.layer, layer] : [layer];
     Promise.all(wanted.map((l) => getRaster(atlasUrl(l.src)).then((raster): Shown => ({ layer: l, raster, image: layerPixels(l, raster) }))))
       .then((drawn) => {
-        if (!live || !m.style) return;
+        if (!live) return;
         const right = drawn[drawn.length - 1]!;
         shown.current = right;
         if (drawn.length === 2) {
           sides.current = { left: drawn[0]!, right };
           redraw.current();
         } else {
-          showData(m, geo.corners, { image: right.image }, opacityNow.current);
+          m.setData({ image: right.image });
         }
         setStatus({ state: "idle" });
       })
       .catch((err: unknown) => {
         if (!live) return;
-        removeLayer(m, DATA);                    // do not leave the previous layer up under this one's name
+        m.setData(null);                         // do not leave the previous layer up under this one's name
         setStatus({ state: "error", message: err instanceof Error ? err.message : String(err) });
       });
     return () => {
       live = false;
     };
-  }, [layer, before?.layer, styleGen, geo]); // not on opacity (set below without redrawing); `before` by its layer
+  }, [layer, before?.layer, engine]); // not on opacity (set below without redrawing); `before` by its layer
 
   // comparing: the earliest year left of the divider, the selected year right of it; redrawn as the divider
   // moves and as the map pans (the divider stays put on screen), at most once a frame
@@ -312,15 +190,15 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
     if (frame.current) return;
     frame.current = requestAnimationFrame(() => {
       frame.current = 0;
-      const m = map.current, s = sides.current, el = mapEl.current;
-      if (!m?.style || !s || !el) return;
-      const { lng, lat } = m.unproject([(splitNow.current / 100) * el.clientWidth, el.clientHeight / 2]);
-      const col = geo.cellAt(lat, lng)[1];
+      const m = engineNow.current, s = sides.current, el = mapEl.current;
+      if (!m || !s || !el) return;
+      const { lat, lon } = m.unproject((splitNow.current / 100) * el.clientWidth, el.clientHeight / 2);
+      const col = geo.cellAt(lat, lon)[1];
       splitCol.current = col;
       const { width, height } = s.right.image;
       const out = new Uint8ClampedArray(new ArrayBuffer(width * height * 4));
       splitImage(s.left.image.data, s.right.image.data, width, height, col, out);
-      showData(m, geo.corners, { image: new ImageData(out, width, height) }, opacityNow.current);
+      m.setData({ image: new ImageData(out, width, height) });
     });
   };
   useEffect(() => {
@@ -328,14 +206,9 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
     else splitCol.current = null;
   }, [split, comparing]);
   useEffect(() => {
-    const m = map.current;
-    if (!m || !ready || !comparing) return;
-    const move = () => redraw.current();
-    m.on("move", move);
-    return () => {
-      m.off("move", move);
-    };
-  }, [ready, comparing]);
+    if (!engine || !comparing) return;
+    return engine.onMove(() => redraw.current());
+  }, [engine, comparing]);
 
   // playing: show each year for a moment once it has loaded, and stop on the latest
   useEffect(() => {
@@ -383,24 +256,15 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
   };
 
   useEffect(() => {
-    const m = map.current;
-    if (m?.style && m.getLayer(DATA)) m.setPaintProperty(DATA, "raster-opacity", opacity);
-  }, [opacity, status]);
+    engine?.setOpacity(opacity);
+  }, [opacity, engine]);
 
   // the circle around the focus, over the data layer and under the labels
   useEffect(() => {
-    const m = map.current;
-    if (!m || !styleGen || !focus) return;
-    m.addSource(FOCUS, { type: "geojson", data: circle(focus.lat, focus.lon, RADIUS_M) });
-    const before = aboveBasemap(m);
-    m.addLayer({ id: `${FOCUS}-fill`, type: "fill", source: FOCUS, paint: { "fill-color": "#ffffff", "fill-opacity": 0.12 } }, before);
-    m.addLayer({ id: `${FOCUS}-line`, type: "line", source: FOCUS, paint: { "line-color": dark ? "#ffffff" : "#14161a", "line-width": 2.5, "line-dasharray": [2, 1.5] } }, before);
-    return () => {
-      if (!m.style) return;
-      for (const id of [`${FOCUS}-line`, `${FOCUS}-fill`]) if (m.getLayer(id)) m.removeLayer(id);
-      if (m.getSource(FOCUS)) m.removeSource(FOCUS);
-    };
-  }, [focus, styleGen, dark]);
+    if (!engine || !focus) return;
+    engine.setFocus({ lat: focus.lat, lon: focus.lon, radiusM: RADIUS_M });
+    return () => engine.setFocus(null);
+  }, [focus, engine]);
 
   // the summary for the focus: read the layers it needs (each once per visit) and sum up the circle
   useEffect(() => {
@@ -425,12 +289,12 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
 
   const goTo = (f: Focus, fly: boolean) => {
     setFocus(f);
-    popup.current?.remove();
-    const m = map.current;
+    const m = engineNow.current;
+    m?.closePopup();
     const wide = window.matchMedia("(min-width: 861px)").matches;
     if (m && fly) {
-      m.flyTo({ center: [f.lon, f.lat], zoom: Math.max(m.getZoom(), 13.5), padding: { top: 0, bottom: 0, left: 0, right: wide ? 380 : 0 },
-        essential: true, duration: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1600 });
+      m.flyTo({ lat: f.lat, lon: f.lon }, { minZoom: 13.5, padRight: wide ? 380 : 0,
+        duration: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1600 });
     }
     if (!wide) window.setTimeout(() => card.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
   };
@@ -460,9 +324,8 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
 
   // what is under the cursor (hover) or the finger (tap)
   useEffect(() => {
-    const m = map.current;
-    const lib = ml.current;
-    if (!m || !lib) return;
+    const m = engine;
+    if (!m) return;
     // the layer drawn at a grid column: when comparing, the side of the divider it is on
     const under = (col: number): Shown | null => {
       const two = sides.current, at = splitCol.current;
@@ -476,15 +339,13 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
       const near = nearest(places, lat, lon);
       return { inside, text, layer: s?.layer ?? null, near: near ? `${near.km < 0.5 ? "in" : "near"} ${near.place.name}` : null };
     };
-    const move = (e: MapMouseEvent) => {
-      const { lat, lng } = e.lngLat;
+    const move = ({ lat, lon: lng }: { lat: number; lon: number }) => {
       const r = read(lat, lng);
       const label = sides.current && r.text && r.layer ? `${r.layer.label}: ${r.text}` : r.text;
       setCursor([label, r.near, formatLatLon(lat, lng)].filter(Boolean).join(" · "));
     };
     const out = () => setCursor(null);
-    const click = (e: MapMouseEvent) => {
-      const { lat, lng } = e.lngLat;
+    const click = ({ lat, lon: lng }: { lat: number; lon: number }) => {
       const r = read(lat, lng);
       const s = r.layer ? { layer: r.layer } : shown.current;
       if (!s) return;
@@ -511,18 +372,10 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
         };
         box.append(more);
       }
-      popup.current?.remove();
-      popup.current = new lib.Popup({ maxWidth: "260px", focusAfterOpen: false }).setLngLat(e.lngLat).setDOMContent(box).addTo(m);
+      m.popup({ lat, lon: lng }, box);
     };
-    m.on("mousemove", move);
-    m.on("mouseout", out);
-    m.on("click", click);
-    return () => {
-      m.off("mousemove", move);
-      m.off("mouseout", out);
-      m.off("click", click);
-    };
-  }, [ready, geo, places, h, w, summarisable]);
+    return m.onPointer({ move, out, click });
+  }, [engine, geo, places, h, w, summarisable]);
 
   const groups = [...new Set(atlas.layers.map((l) => l.group))];
   return (
@@ -608,10 +461,7 @@ export const AtlasMap = forwardRef<HTMLElement, Props>(function AtlasMap({ atlas
           {cursor && <div className="cursor-read" role="status">{cursor}</div>}
           {basemapNote && (
             <div className="float basemap-note" role="status">
-              Street map unavailable ({basemapNote}), so the layer is shown on a plain background.{" "}
-              {/worker/i.test(basemapNote)
-                ? "MapLibre's helper script did not load; on the dev server, restart it with npm run dev -- --force."
-                : "An ad or privacy blocker, or the network, may be stopping tiles.openfreemap.org."}
+              Street map unavailable ({basemapNote.why}), so the layer is shown on a plain background. {basemapNote.hint}
             </div>
           )}
         </div>

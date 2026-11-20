@@ -117,3 +117,13 @@ export function gridGeo(grid: Grid, height: number, width: number) {
 export function formatLatLon(lat: number, lon: number): string {
   return `${Math.abs(lat).toFixed(4)}° ${lat >= 0 ? "N" : "S"}, ${Math.abs(lon).toFixed(4)}° ${lon >= 0 ? "E" : "W"}`;
 }
+
+/** A circle of radius r metres around a point, as GeoJSON (good to a metre at this size). */
+export function circle(lat: number, lon: number, r: number): GeoJSON.Feature<GeoJSON.Polygon> {
+  const dLat = r / 111320, dLon = r / (111320 * Math.cos((lat * Math.PI) / 180));
+  const ring = Array.from({ length: 65 }, (_, i) => {
+    const a = (i / 64) * 2 * Math.PI;
+    return [lon + dLon * Math.cos(a), lat + dLat * Math.sin(a)];
+  });
+  return { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [ring] } };
+}
