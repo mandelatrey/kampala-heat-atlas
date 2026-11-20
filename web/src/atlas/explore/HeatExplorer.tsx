@@ -8,12 +8,16 @@ import { signed, type Stats } from "../stats";
 import { cellsWithin } from "../summary";
 import type { Atlas } from "../types";
 import { hotterThan, lczCode, LCZ_WORDS, rankPlaces, spreadOut, type Ranked } from "./logic";
+import { DayNight } from "./DayNight";
 import { useLayers, useNearScreen, type Layers } from "./useLayers";
 
 const RADIUS_M = 500;
 const SHOW = 8;
 
-/** "Hottest and coolest neighbourhoods" (a ranking of named places) and "What kind of place runs hot?" (the zones). */
+/**
+ * "Hottest and coolest neighbourhoods" (a ranking of named places), "What kind of place runs hot?" (the zones) and
+ * "Does it cool down at night?" (day and night heat).
+ */
 export function HeatExplorer({ atlas, stats }: { atlas: Atlas; stats: Stats }) {
   const box = useRef<HTMLDivElement>(null);
   const y2 = atlas.years[2];
@@ -25,6 +29,7 @@ export function HeatExplorer({ atlas, stats }: { atlas: Atlas; stats: Stats }) {
         {layers.state === "error" && <p className="muted">The heat map could not be loaded ({layers.message}).</p>}
         {layers.state === "ready" && <Ranking atlas={atlas} layers={layers.data} />}
         <Zones stats={stats} />
+        <DayNight />
       </div>
     </div>
   );

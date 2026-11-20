@@ -34,19 +34,9 @@ const groups = (mode: Mode): { title: string; links: Link[] }[] => [
     title: "Site weather",
     links: [
       { label: "Heat today", href: "#/heat", active: (r) => r.page === "heat" },
-      { label: "All sites", href: "#/site-weather", active: (r) => r.page === "sites" || r.page === "site" },
+      { label: "Day weather planner", href: "#/site-weather", active: (r) => r.page === "sites" || r.page === "site" },
       { label: "Map", href: dataUrl("site-weather/map.html"), external: true },
       { label: "Share today", href: dataUrl("site-weather/share.html"), external: true },
-    ],
-  },
-  {
-    title: "More",
-    links: [
-      { label: "Stories", href: dataUrl("stories.html"), external: true },
-      { label: "Day vs night", href: dataUrl("daynight.html"), external: true },
-      { label: "Meteogram", href: dataUrl("meteogram.html"), external: true },
-      { label: "Figures", href: dataUrl("gallery.html"), external: true },
-      { label: "Code", href: "https://github.com/gavacharles/kampala-heat-atlas", external: true },
     ],
   },
 ];
@@ -112,7 +102,10 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
         </nav>
         <div className="sidebar-foot">
           <ThemeSwitch />
-          <span className="byline">Research by Gava Charles</span>
+          <span className="byline">
+            Research by Gava Charles ·{" "}
+            <a href="https://github.com/gavacharles/kampala-heat-atlas" target="_blank" rel="noreferrer">Code</a>
+          </span>
         </div>
       </aside>
       <main className="content">{children}</main>

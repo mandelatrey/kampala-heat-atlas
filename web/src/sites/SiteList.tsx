@@ -24,7 +24,7 @@ export function SiteList() {
   const [trade, setTrade] = useState("");
   const [sort, setSort] = useState<"name" | "status">("name");
   useEffect(() => {
-    document.title = "Site weather · Kampala Heat Atlas";
+    document.title = "Day weather planner · Kampala Heat Atlas";
   }, []);
 
   const towns = useMemo(() => {
@@ -46,7 +46,7 @@ export function SiteList() {
     <div className="page">
       <header className="stack" style={{ gap: 8 }}>
         <span className="eyebrow">Site weather · issued {issued}</span>
-        <h1>Today on site</h1>
+        <h1>Day weather planner</h1>
         <p className="lede">
           Hour-by-hour workable time for seven trades, a daily site note and a monthly weather record against each town's
           1991-2020 climate. Pick the town nearest your site.

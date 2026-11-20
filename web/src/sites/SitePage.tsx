@@ -120,7 +120,7 @@ export function SitePage({ slug }: { slug: string }) {
       <div className="page">
         <h1>No site weather for “{slug}”</h1>
         <p className="lede">The forecast for this site could not be loaded ({site.message}).</p>
-        <p><a className="btn" href="#/site-weather">All sites</a></p>
+        <p><a className="btn" href="#/site-weather">Day weather planner</a></p>
       </div>
     );
   }
@@ -143,7 +143,7 @@ export function SitePage({ slug }: { slug: string }) {
     <div className="page site">
       <div className="site-top">
         <div className="stack" style={{ gap: 6 }}>
-          <a className="eyebrow back" href="#/site-weather">← All sites</a>
+          <a className="eyebrow back" href="#/site-weather">← Day weather planner</a>
           <h1>{briefing.site}</h1>
           {ev && <ViewSwitch view={view} onChange={setChosen} />}
         </div>
