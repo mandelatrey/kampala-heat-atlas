@@ -1,5 +1,4 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { dataUrl } from "../lib";
 import type { Route } from "../router";
 import { useMode, type Mode } from "../mode";
 import { useTheme, type ThemeChoice } from "../theme";
@@ -35,8 +34,6 @@ const groups = (mode: Mode): { title: string; links: Link[] }[] => [
     links: [
       { label: "Heat today", href: "#/heat", active: (r) => r.page === "heat" },
       { label: "Day weather planner", href: "#/site-weather", active: (r) => r.page === "sites" || r.page === "site" },
-      { label: "Map", href: dataUrl("site-weather/map.html"), external: true },
-      { label: "Share today", href: dataUrl("site-weather/share.html"), external: true },
     ],
   },
 ];
