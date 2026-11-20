@@ -70,6 +70,19 @@ npm test           # unit tests, plus a check that docs/atlas/ has everything th
 npm run build      # type-check and build into docs/app/
 ```
 
+**Style editor (dev only).** With `npm run dev` running, press **Shift+Alt+E** (or the "Styles" button,
+bottom right) to adjust font sizes, alignment, padding, margins and gaps by pointing at the page:
+
+- **Pick** an element, or **Alt+click** anything. The page shows its margin, padding and the gaps between its children.
+- Change a value by typing, with ↑/↓ on any number (Shift ×10, Alt ×0.1), or by dragging a label sideways.
+  Shorthands are edited in place (`padding: 18px 20px` stays one line).
+- "Edit rule" chooses which CSS rule the controls write to. Every matching rule is listed, including ones for
+  other screen widths, with how many elements on the page each one styles.
+- Changes preview live. **Save** (Ctrl/⌘+S) writes them into the `.css` file the rule lives in; review them with `git diff`.
+- Inline `style={{...}}` in a component beats the CSS; the editor flags it, but those are changed in the TSX.
+
+The editor lives in `web/src/devtools/` and is never part of `npm run build`.
+
 `docs/app/` is not committed: the GitHub workflow builds it before each deploy. The data contract between
 the two halves is `web/src/types.ts`, `web/src/atlas/types.ts` and `web/src/viewer3d/types.ts`; if a script changes what it writes,
 update the types there.

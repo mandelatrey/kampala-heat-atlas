@@ -10,3 +10,6 @@ createRoot(root).render(
     <App />
   </StrictMode>,
 );
+
+// Development only: the style editor (Shift+Alt+E). import.meta.env.DEV is false in `npm run build`, so it is never shipped.
+if (import.meta.env.DEV) void import("./devtools/StyleEditor").then((m) => m.mountStyleEditor());

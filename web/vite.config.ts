@@ -2,6 +2,7 @@ import { createReadStream, statSync } from "node:fs";
 import { extname, join, normalize, resolve, sep } from "node:path";
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
+import { styleEditor } from "./src/devtools/server";
 
 // The app is built into docs/app/ and reads the data the Python scripts write elsewhere in docs/
 // (../atlas/atlas.json, ../site-weather/<slug>/..., links to ../3d.html). In development the app is
@@ -49,7 +50,8 @@ function serveDocs(): Plugin {
 
 export default defineConfig({
   base: "./",
-  plugins: [react(), serveDocs()],
+  // styleEditor: the dev-only style editor writes CSS edits made in the browser back into src/ (see src/devtools/)
+  plugins: [react(), serveDocs(), styleEditor(resolve(import.meta.dirname, "src"))],
   // the 3D viewer chunk (deck.gl, ~200 kB gzipped) is loaded only on its own page
   build: { outDir: "../docs/app", emptyOutDir: true, chunkSizeWarningLimit: 800 },
 });
