@@ -40,27 +40,24 @@
 .layer:has(input:checked) { background: var(--ink); color: var(--surface); font-weight: 600; }
 .layer:has(input:checked)::before { background: var(--accent); border-color: var(--accent); }
 .layer:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 1px; }
-.mapcol { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-width: 0; }
+.mapcol { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-width: 0; position: relative; }
 .mapwrap { position: relative; }
 .map { height: clamp(420px, 68vh, 760px); background: #d4d5cf; }
 :root[data-theme="dark"] .map { background: #2a2c2b; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .map { background: #2a2c2b; } }
-.leaflet-container { font-family: var(--f-sans); }
-.leaflet-bar { border: 1px solid var(--line) !important; border-radius: 12px !important; overflow: hidden; box-shadow: var(--shadow) !important; }
-.leaflet-bar a { background: var(--surface) !important; color: var(--ink) !important; border-color: var(--line) !important; }
 .float {
   position: absolute; z-index: 500; background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(10px);
   border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 10px 12px; display: grid; gap: 8px;
 }
 .float .eyebrow { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
-.legend { left: 12px; bottom: 12px; max-width: min(460px, calc(100% - 24px)); }
+.legend { left: 12px; bottom: 30px; max-width: min(460px, calc(100% - 24px)); }
 .legend-classes { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; }
 .legend-classes span { display: inline-flex; align-items: center; gap: 6px; }
 .legend-classes i { width: 12px; height: 12px; border-radius: 3px; border: 1px solid rgb(0 0 0 / .15); }
 .legend-ramp { display: grid; gap: 4px; width: 260px; max-width: 100%; }
 .legend-ramp .bar { height: 10px; border-radius: 4px; }
 .legend-ramp .ends { display: flex; justify-content: space-between; gap: 8px; font: 11.5px var(--f-mono); color: var(--ink-2); }
-.opacity { right: 12px; bottom: 12px; width: 168px; }
+.opacity { right: 12px; bottom: 36px; width: 168px; }
 .opacity input { width: 100%; accent-color: var(--ink); }
 .caption { padding: 12px 16px; font-size: 13px; color: var(--ink-2); border-top: 1px solid var(--line); }
 @media (max-width: 860px) {
@@ -88,27 +85,207 @@ ul.find li::marker { color: var(--accent); }
 @media (max-width: 860px) { .cols { grid-template-columns: minmax(0, 1fr); } .module { padding: 18px 16px; } }
 @media (max-width: 960px) { .mapcard, .module { scroll-margin-top: 72px; } }
 
-/* place names: dark text with a light halo, centred on the place; bigger and bolder for bigger places */
-.place-label { pointer-events: none; }
-.place-label span {
-  position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); white-space: nowrap;
-  font: 500 12.5px/1 var(--f-sans); color: #15171b; letter-spacing: .01em;
-  text-shadow: 0 0 2px #fff, 0 0 3px #fff, 0 0 5px rgb(255 255 255 / .9), 0 0 8px rgb(255 255 255 / .6);
-}
-.place-label.r1 span { font-size: 15px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
-.place-label.r2 span { font-size: 13.5px; font-weight: 650; }
-.place-label.r4 span, .place-label.r5 span { font-weight: 450; color: #2d3036; }
-.names-toggle { white-space: nowrap; display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-2); cursor: pointer; }
-.names-toggle input { accent-color: var(--ink); }
-.scalebar {
-  position: absolute; z-index: 500; left: 12px; top: 12px; display: flex; align-items: center; gap: 8px;
-  padding: 6px 10px; border-radius: 10px; background: color-mix(in srgb, var(--surface) 85%, transparent); backdrop-filter: blur(8px);
-  border: 1px solid var(--line); font: 11.5px var(--f-mono); color: var(--ink-2);
-}
-.scalebar-bar { height: 6px; border: 1.5px solid var(--ink); border-top: 0; display: block; }
+.toggle { white-space: nowrap; display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-2); cursor: pointer; }
+.toggle input { accent-color: var(--ink); }
+.map-status { left: 50%; top: 12px; transform: translateX(-50%); font-size: 13px; color: var(--ink-2); padding: 8px 12px; }
+.basemap-note { left: 12px; right: 200px; top: 40px; font-size: 12.5px; color: var(--ink-2); max-width: 520px; }
+@media (max-width: 860px) { .basemap-note { right: 12px; } }
+.map-status.error { color: var(--critical-ink); background: var(--critical-bg); }
+.maplibregl-map { font-family: var(--f-sans); }
+.maplibregl-ctrl-group { border-radius: 12px !important; overflow: hidden; box-shadow: var(--shadow) !important; border: 1px solid var(--line); }
+.maplibregl-ctrl-scale { background: color-mix(in srgb, var(--surface) 85%, transparent); border-color: var(--ink); color: var(--ink-2); font: 11px var(--f-mono); }
+.maplibregl-ctrl-attrib { font: 10.5px var(--f-sans); }
+.maplibregl-popup-content { background: var(--surface); color: var(--ink); border-radius: 14px; border: 1px solid var(--line); box-shadow: var(--shadow); padding: 12px 30px 12px 14px; }
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: var(--surface); }
+.maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: var(--surface); }
+.maplibregl-popup-anchor-left .maplibregl-popup-tip { border-right-color: var(--surface); }
+.maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color: var(--surface); }
+.maplibregl-popup-close-button { color: var(--muted); font-size: 18px; right: 6px; top: 4px; }
+/* the map without WebGL (Leaflet): same look as the MapLibre one */
+.map { isolation: isolate; }            /* Leaflet's panes stay under the floating panels */
+.map.leaflet-container { font-family: var(--f-sans); background: #d4d5cf; }
+:root[data-theme="dark"] .map.leaflet-container { background: #2a2c2b; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .map.leaflet-container { background: #2a2c2b; } }
+.atlas-data-canvas { image-rendering: pixelated; }
+.leaflet-bar { border-radius: 12px !important; overflow: hidden; box-shadow: var(--shadow) !important; border: 1px solid var(--line) !important; }
+.leaflet-control-scale-line { background: color-mix(in srgb, var(--surface) 85%, transparent); border-color: var(--ink); color: var(--ink-2); font: 11px var(--f-mono); }
+.leaflet-container .leaflet-control-attribution { font: 10.5px var(--f-sans); background: color-mix(in srgb, var(--surface) 80%, transparent); color: var(--ink-2); }
+.leaflet-container .leaflet-control-attribution a { color: inherit; }
+.leaflet-popup-content-wrapper { background: var(--surface); color: var(--ink); border-radius: 14px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+.leaflet-popup-content { margin: 12px 30px 12px 14px; }
+.leaflet-popup-tip { background: var(--surface); }
+.leaflet-container a.leaflet-popup-close-button { color: var(--muted); font-size: 18px; }
+.readout { display: grid; gap: 4px; font-family: var(--f-sans); }
+.readout strong { font-size: 15px; font-weight: 620; line-height: 1.3; }
+.readout .where { font: 11.5px var(--f-mono); color: var(--muted); }
 .cursor-read {
-  position: absolute; z-index: 500; left: 12px; top: 50px; padding: 5px 10px; border-radius: 10px; pointer-events: none;
+  position: absolute; z-index: 500; left: 12px; top: 40px; padding: 5px 10px; border-radius: 10px; pointer-events: none;
   background: color-mix(in srgb, var(--surface) 85%, transparent); backdrop-filter: blur(8px); border: 1px solid var(--line);
   font: 11.5px var(--f-mono); color: var(--ink-2); max-width: calc(100% - 24px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 @media (max-width: 860px) { .cursor-read { display: none; } }
+
+/* charts (charts.tsx): drawn from stats.json at the width they are shown, in the page's colours */
+.chart { margin: 0; display: grid; gap: 10px; min-width: 0; border: 1px solid var(--line); border-radius: 14px; padding: 14px 14px 10px; background: var(--surface); }
+.chart figcaption { display: grid; gap: 2px; }
+.chart-title { font-size: 14px; font-weight: 620; color: var(--ink); }
+.chart-note { font-size: 12.5px; color: var(--muted); }
+.chart-body { min-width: 0; }
+.chart svg { display: block; overflow: visible; font-family: var(--f-sans); }
+.chart text { fill: var(--ink-2); font-size: 12px; }
+.chart .axis text, .chart .unit, .chart .axis-x { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .zero { stroke: var(--line-strong); stroke-width: 1.5; }
+.chart .dot { stroke: var(--surface); stroke-width: 1.5; }
+.chart .leader { stroke: var(--line-strong); stroke-width: 1; }
+.chart .bar-link { stroke: var(--line-strong); stroke-width: 2.5; }
+.chart .benchmark { stroke: var(--ink); stroke-width: 1.3; stroke-dasharray: 5 4; }
+.chart .panel-title { fill: var(--ink); font-weight: 600; font-size: 12.5px; }
+.chart .value { font-variant-numeric: tabular-nums; font-size: 11.5px; }
+.chart .compass { fill: var(--ink); font-weight: 600; font-size: 12px; }
+.chart .petal { stroke: var(--surface); stroke-width: 1; }
+.chart-src { margin: 0; font-size: 12px; color: var(--muted); }
+.chart-src a { color: inherit; }
+.chart-key { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--ink-2); }
+.chart-key li { display: inline-flex; align-items: center; gap: 6px; }
+.chart-key i { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.chart-key i.line { width: 18px; height: 0; border-radius: 0; border-top: 1.5px dashed; }
+.chart-panels { display: grid; gap: 16px; }
+.chart-panels.side { grid-template-columns: 1fr 1fr; gap: 24px; }
+.wind { display: grid; justify-items: center; gap: 8px; }
+.wind-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; justify-self: stretch; font-size: 13px; }
+.wind-hour { display: flex; align-items: center; gap: 8px; flex: 1 1 160px; }
+.wind-hour .num { font: 600 13px var(--f-mono); min-width: 44px; }
+.wind-hour input { flex: 1; accent-color: var(--ink); }
+
+/* link from the cube module to the 3D model */
+.to3d {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; border-radius: 14px;
+  border: 1px solid var(--line); background: var(--surface-2); text-decoration: none; color: var(--ink);
+}
+.to3d:hover { border-color: var(--line-strong); }
+.to3d b { font-size: 15px; }
+.to3d .muted { font-size: 13px; }
+
+/* find your area: search row across the top of the map card */
+.map-search {
+  grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 20px;
+  padding: 14px 16px; border-bottom: 1px solid var(--line); background: var(--surface-2);
+}
+.search-label { display: grid; gap: 2px; }
+.search-hint { font-size: 14px; color: var(--ink-2); }
+.search-row .btn { white-space: nowrap; }
+.search-row { display: flex; gap: 8px; align-items: center; flex: 1 1 380px; max-width: 620px; min-width: 0; }
+.search-box { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--surface); color: var(--muted); }
+.search-box:focus-within { border-color: var(--focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 20%, transparent); }
+.search-box input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: var(--ink); font: 15px var(--f-sans); padding: 11px 0; }
+.search-list {
+  position: absolute; z-index: 600; left: -1px; right: -1px; top: calc(100% + 6px); margin: 0; padding: 6px; list-style: none;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); max-height: 320px; overflow: auto;
+}
+.search-list li { display: grid; gap: 1px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+.search-list li b { color: var(--ink); font-weight: 600; font-size: 14px; }
+.search-list li span { color: var(--muted); font-size: 12.5px; }
+.search-list li[aria-selected="true"] { background: var(--surface-2); }
+.search-list.empty { padding: 12px 14px; font-size: 13.5px; color: var(--ink-2); }
+
+/* the summary card: over the right of the map on wide screens, under it on phones */
+.place-card-wrap { position: absolute; z-index: 520; top: 12px; right: 56px; width: min(340px, calc(100% - 120px)); max-height: calc(clamp(420px, 68vh, 760px) - 150px); overflow: auto; border-radius: 16px; }
+.place-card {
+  display: grid; gap: 12px; padding: 16px 16px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow);
+}
+.place-card header { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+.place-card h3 { margin: 0; font-size: 20px; letter-spacing: -0.01em; }
+.place-card header .muted { font-size: 13px; }
+.place-card .close { border: 0; background: var(--surface-2); color: var(--ink-2); width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; flex: none; }
+.place-card dl { margin: 0; display: grid; gap: 10px; }
+.fact-line { display: grid; gap: 2px; padding-left: 10px; border-left: 3px solid var(--line-strong); }
+.fact-line.t-hot { border-left-color: var(--hot); }
+.fact-line.t-cool { border-left-color: var(--cool); }
+.fact-line.t-warn { border-left-color: var(--warning); }
+.fact-line dt { font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.fact-line dd { margin: 0; font-size: 14px; line-height: 1.45; color: var(--ink); }
+.place-card .fine { margin: 0; font-size: 12px; }
+.readout-more { margin-top: 6px; padding: 6px 10px; font-size: 12.5px; justify-self: start; }
+@media (max-width: 860px) {
+  .place-card-wrap { position: static; width: auto; max-height: none; overflow: visible; padding: 12px; border-radius: 0; border-top: 1px solid var(--line); }
+  .place-card { box-shadow: none; }
+  .map-search { padding: 12px; }
+}
+
+/* simple mode */
+.head-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.reading { display: flex; gap: 10px; align-items: start; padding: 12px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); max-width: 78ch; color: var(--ink-2); }
+.reading svg { flex: none; margin-top: 3px; color: var(--accent); }
+.reading p { margin: 0; font-size: 14px; line-height: 1.55; }
+ul.find.plain { font-size: 15.5px; line-height: 1.55; color: var(--ink); gap: 12px; }
+.confidence { display: flex; gap: 10px; align-items: baseline; margin: 0; font-size: 14px; color: var(--ink-2); max-width: 90ch; }
+.conf-badge { flex: none; padding: 3px 10px; border-radius: 999px; font: 600 12px var(--f-sans); }
+.c-solid .conf-badge { background: var(--good-bg); color: var(--good-ink); }
+.c-fair .conf-badge { background: var(--warning-bg); color: var(--warning-ink); }
+.c-early .conf-badge { background: var(--critical-bg); color: var(--critical-ink); }
+details.how { border-top: 1px solid var(--line); padding-top: 10px; }
+details.how summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--ink-2); width: max-content; }
+details.how[open] summary { margin-bottom: 12px; }
+details.how .callout { margin-top: 12px; }
+
+/* years: play through a layer's years, or compare the earliest with the selected one across a divider */
+.timebar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid var(--line); }
+.timebar .play { width: 32px; height: 32px; border-radius: 10px; }
+.timebar .years { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.timebar .years button { border: 0; background: var(--surface); color: var(--ink-2); font: 500 12.5px var(--f-mono); padding: 7px 10px; cursor: pointer; }
+.timebar .years button + button { border-left: 1px solid var(--line); }
+.timebar .years button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.timebar button:disabled { opacity: .45; cursor: default; }
+.timebar .compare { padding: 6px 10px; font-size: 12.5px; border-radius: 10px; }
+.timebar .compare[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.timebar button:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.swipe { position: absolute; z-index: 450; top: 0; bottom: 0; width: 0; pointer-events: none; border-left: 2px solid #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / .3); transform: translateX(-1px); }
+.swipe-handle {
+  position: absolute; top: 50%; left: 0; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%;
+  display: grid; place-items: center; background: #fff; color: #14161a; font: 700 15px/1 var(--f-sans); letter-spacing: -.05em;
+  box-shadow: var(--shadow), 0 0 0 1px rgb(0 0 0 / .2); pointer-events: auto; cursor: ew-resize; touch-action: none; user-select: none;
+}
+.swipe-handle:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.swipe-tag { position: absolute; top: 92px; padding: 3px 8px; border-radius: 8px; background: rgb(20 22 26 / .82); color: #fff; font: 600 12px var(--f-mono); white-space: nowrap; }
+.swipe-tag.left { right: 8px; }
+.swipe-tag.right { left: 8px; }
+
+/* solar calculator, under the rooftop solar module */
+.linkbtn { border: 0; background: none; padding: 0; font: inherit; color: var(--ink); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.linkbtn:hover { color: var(--accent); }
+.calc { display: grid; gap: 16px; border-top: 1px solid var(--line); padding-top: 18px; }
+.calc-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.calc-head h3 { margin: 0; font-size: 18px; font-weight: 620; letter-spacing: -0.01em; }
+.calc-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 24px; align-items: start; }
+.calc-in { display: grid; gap: 14px; }
+.calc-field { display: grid; gap: 4px; }
+.calc-field label { display: grid; gap: 6px; cursor: pointer; }
+.calc-label { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; color: var(--ink-2); }
+.calc-label b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.calc-field input[type="range"] { width: 100%; accent-color: var(--ink); }
+.calc-hint { font-size: 12.5px; color: var(--muted); }
+.calc-bill, .calc-prices input { width: 9em; padding: 4px 8px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); color: var(--ink); font: 13px var(--f-mono); }
+.calc-in .toggle { white-space: normal; font-size: 13px; }
+.calc-prices summary { cursor: pointer; font-size: 13px; color: var(--ink-2); }
+.calc-prices label { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+.calc-prices .fine { margin-top: 8px; }
+.calc-out { display: grid; gap: 14px; background: var(--surface-2); border-radius: 14px; padding: 16px; }
+.calc-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.calc-tiles > div { display: grid; gap: 4px; align-content: start; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; min-width: 0; }
+.calc-tiles b { font-size: 21px; font-weight: 620; letter-spacing: -0.02em; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.calc-tiles span:last-child { font-size: 12.5px; color: var(--ink-2); }
+.calc-lines { margin: 0; padding-left: 18px; display: grid; gap: 8px; font-size: 14px; color: var(--ink-2); }
+.calc-lines li::marker { color: var(--accent); }
+.calc-lines li.power::marker { color: var(--warning); }
+@media (max-width: 860px) {
+  .calc-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+  .calc-tiles { grid-template-columns: minmax(0, 1fr); }
+  .calc-tiles > div { grid-template-columns: auto 1fr; align-items: baseline; gap: 4px 10px; }
+  .calc-tiles > div span:last-child { grid-column: 1 / -1; }
+}
+.calc-where .map-search { padding: 0; border: 0; background: none; grid-column: auto; display: grid; gap: 6px; }
+.calc-where .search-row { flex: none; max-width: none; }
+.calc-where .search-box input { padding: 8px 0; font-size: 14px; }

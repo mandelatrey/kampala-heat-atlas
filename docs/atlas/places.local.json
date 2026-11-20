@@ -1,0 +1,1650 @@
+{
+ "source": "© OpenStreetMap contributors (ODbL 1.0), via the Overpass API",
+ "fetched": "2026-11-18",
+ "bbox": [
+  32.35,
+  0.1,
+  32.85,
+  0.55
+ ],
+ "places": [
+  {
+   "name": "Kampala",
+   "kind": "city",
+   "rank": 1,
+   "lat": 0.31771,
+   "lon": 32.58135
+  },
+  {
+   "name": "Kira",
+   "kind": "city",
+   "rank": 1,
+   "lat": 0.40034,
+   "lon": 32.63918
+  },
+  {
+   "name": "Nansana",
+   "kind": "city",
+   "rank": 1,
+   "lat": 0.36582,
+   "lon": 32.52923
+  },
+  {
+   "name": "Wakiso",
+   "kind": "city",
+   "rank": 1,
+   "lat": 0.39857,
+   "lon": 32.48009
+  },
+  {
+   "name": "Biira",
+   "kind": "town",
+   "rank": 2,
+   "lat": 0.33735,
+   "lon": 32.50905
+  },
+  {
+   "name": "Bunamwaya",
+   "kind": "town",
+   "rank": 2,
+   "lat": 0.26513,
+   "lon": 32.54604
+  },
+  {
+   "name": "Gayaza",
+   "kind": "town",
+   "rank": 2,
+   "lat": 0.45179,
+   "lon": 32.61114
+  },
+  {
+   "name": "Gayaza Town",
+   "kind": "town",
+   "rank": 2,
+   "lat": 0.4488,
+   "lon": 32.6118
+  },
+  {
+   "name": "Kajjansi",
+   "kind": "town",
+   "rank": 2,
+   "lat": 0.21054,
+   "lon": 32.54267
+  },
+  {
+   "name": "Kakiri",
+   "kind": "town",
+   "rank": 2,
+   "lat": 0.41873,
+   "lon": 32.39076
+  },
+  {
+   "name": "Kalagi",
+   "kind": "town",
+   "rank": 2,
+   "lat": 0.50386,
+   "lon": 32.74954
+  },
+  {
+   "name": "Kasangati",
+   "kind": "town",
+   "rank": 2,
+   "lat": 0.43768,
+   "lon": 32.60492
+  },
+  {
+   "name": "Kayunga",
+   "kind": "town",
+   "rank": 2,
+   "lat": 0.39659,
+   "lon": 32.49875
+  },
+  {
+   "name": "Kitebi",
+   "kind": "town",
+   "rank": 2,
+   "lat": 0.27355,
+   "lon": 32.5469
+  },
+  {
+   "name": "Kitemu",
+   "kind": "town",
+   "rank": 2,
+   "lat": 0.27362,
+   "lon": 32.46615
+  },
+  {
+   "name": "Kyengera",
+   "kind": "town",
+   "rank": 2,
+   "lat": 0.29461,
+   "lon": 32.5021
+  },
+  {
+   "name": "Mukono",
+   "kind": "town",
+   "rank": 2,
+   "lat": 0.36085,
+   "lon": 32.74609
+  },
+  {
+   "name": "Mulungu",
+   "kind": "town",
+   "rank": 2,
+   "lat": 0.23195,
+   "lon": 32.62262
+  },
+  {
+   "name": "Nagalama",
+   "kind": "town",
+   "rank": 2,
+   "lat": 0.51364,
+   "lon": 32.77096
+  },
+  {
+   "name": "Akright City",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.16786,
+   "lon": 32.5259
+  },
+  {
+   "name": "Bbuto",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.35346,
+   "lon": 32.65688
+  },
+  {
+   "name": "Bugolobi",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.3139,
+   "lon": 32.62204
+  },
+  {
+   "name": "Bukasa",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.28911,
+   "lon": 32.62686
+  },
+  {
+   "name": "Bukasa",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.31055,
+   "lon": 32.67399
+  },
+  {
+   "name": "Bukoto",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.35424,
+   "lon": 32.60073
+  },
+  {
+   "name": "Bukuluugi",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.32822,
+   "lon": 32.52813
+  },
+  {
+   "name": "Busega",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.30932,
+   "lon": 32.51896
+  },
+  {
+   "name": "Buwate",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.40851,
+   "lon": 32.61959
+  },
+  {
+   "name": "Buziga",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.25892,
+   "lon": 32.6177
+  },
+  {
+   "name": "Ggaba",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.26153,
+   "lon": 32.63164
+  },
+  {
+   "name": "Jjanda",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.39844,
+   "lon": 32.66621
+  },
+  {
+   "name": "Kabalagala",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.30264,
+   "lon": 32.59517
+  },
+  {
+   "name": "Kaboja",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.29199,
+   "lon": 32.52189
+  },
+  {
+   "name": "Kabowa",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.28288,
+   "lon": 32.55689
+  },
+  {
+   "name": "Kansanga",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.292,
+   "lon": 32.60457
+  },
+  {
+   "name": "Kanyanya",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.36996,
+   "lon": 32.57757
+  },
+  {
+   "name": "Kasubi",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.33135,
+   "lon": 32.55636
+  },
+  {
+   "name": "Katwe",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.2972,
+   "lon": 32.57588
+  },
+  {
+   "name": "Kawaala",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.34299,
+   "lon": 32.55019
+  },
+  {
+   "name": "Kawempe",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.37421,
+   "lon": 32.55899
+  },
+  {
+   "name": "Kazi",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.21472,
+   "lon": 32.60611
+  },
+  {
+   "name": "Kibuli",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.31175,
+   "lon": 32.59577
+  },
+  {
+   "name": "Kibuye",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.28899,
+   "lon": 32.57124
+  },
+  {
+   "name": "Kigagga",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.30229,
+   "lon": 32.52854
+  },
+  {
+   "name": "Kinawataka",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.33506,
+   "lon": 32.64323
+  },
+  {
+   "name": "Kireka",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.34517,
+   "lon": 32.64839
+  },
+  {
+   "name": "Kirinnya",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.33333,
+   "lon": 32.66667
+  },
+  {
+   "name": "Kisaasi",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.3629,
+   "lon": 32.59973
+  },
+  {
+   "name": "Kisenyi",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.31194,
+   "lon": 32.56922
+  },
+  {
+   "name": "Kiswa",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.32337,
+   "lon": 32.61277
+  },
+  {
+   "name": "Kitaka",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.30313,
+   "lon": 32.52688
+  },
+  {
+   "name": "Kitintale",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.3093,
+   "lon": 32.63763
+  },
+  {
+   "name": "Kiwumu",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.3228,
+   "lon": 32.46996
+  },
+  {
+   "name": "Kololo",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.33411,
+   "lon": 32.59334
+  },
+  {
+   "name": "Konge",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.26826,
+   "lon": 32.60586
+  },
+  {
+   "name": "Kyaliwajjala",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.38021,
+   "lon": 32.64683
+  },
+  {
+   "name": "Kyambogo",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.35625,
+   "lon": 32.62674
+  },
+  {
+   "name": "Kyebando",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.35673,
+   "lon": 32.5807
+  },
+  {
+   "name": "Lubiri",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.29957,
+   "lon": 32.56828
+  },
+  {
+   "name": "Lugogo",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.32719,
+   "lon": 32.6036
+  },
+  {
+   "name": "Luwafu",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.27145,
+   "lon": 32.59431
+  },
+  {
+   "name": "Luzira",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.29749,
+   "lon": 32.65282
+  },
+  {
+   "name": "Makerere",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.33774,
+   "lon": 32.56294
+  },
+  {
+   "name": "Makindye",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.28439,
+   "lon": 32.5837
+  },
+  {
+   "name": "Mbuya",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.32264,
+   "lon": 32.62659
+  },
+  {
+   "name": "Mengo",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.31009,
+   "lon": 32.55567
+  },
+  {
+   "name": "Mpererwe",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.37819,
+   "lon": 32.57754
+  },
+  {
+   "name": "Mulago",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.34084,
+   "lon": 32.57936
+  },
+  {
+   "name": "Munyonyo",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.24454,
+   "lon": 32.62175
+  },
+  {
+   "name": "Mutundwe",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.28273,
+   "lon": 32.53266
+  },
+  {
+   "name": "Mutungo",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.31591,
+   "lon": 32.64256
+  },
+  {
+   "name": "Nabisasiro",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.31993,
+   "lon": 32.53483
+  },
+  {
+   "name": "Naguru",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.34191,
+   "lon": 32.60637
+  },
+  {
+   "name": "Najjanankubi",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.27981,
+   "lon": 32.56656
+  },
+  {
+   "name": "Najjanankumbi",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.26603,
+   "lon": 32.57729
+  },
+  {
+   "name": "Nakasero",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.32404,
+   "lon": 32.58134
+  },
+  {
+   "name": "Nakawa",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.3292,
+   "lon": 32.61501
+  },
+  {
+   "name": "Nakulabye",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.32812,
+   "lon": 32.56354
+  },
+  {
+   "name": "Namugongo",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.39072,
+   "lon": 32.6542
+  },
+  {
+   "name": "Namungoona",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.33289,
+   "lon": 32.54068
+  },
+  {
+   "name": "Nateete",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.29862,
+   "lon": 32.5325
+  },
+  {
+   "name": "Ndeeba",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.29218,
+   "lon": 32.56458
+  },
+  {
+   "name": "Nsambya",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.29138,
+   "lon": 32.58834
+  },
+  {
+   "name": "Nsiike",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.29259,
+   "lon": 32.56238
+  },
+  {
+   "name": "Ntinda",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.35443,
+   "lon": 32.61364
+  },
+  {
+   "name": "Nyanama",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.27092,
+   "lon": 32.55366
+  },
+  {
+   "name": "Port Bell",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.29259,
+   "lon": 32.65644
+  },
+  {
+   "name": "Rubaga",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.30297,
+   "lon": 32.55548
+  },
+  {
+   "name": "Seeta",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.36674,
+   "lon": 32.71313
+  },
+  {
+   "name": "Wandegeya",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.33341,
+   "lon": 32.57552
+  },
+  {
+   "name": "Wankulukuku",
+   "kind": "suburb",
+   "rank": 3,
+   "lat": 0.28609,
+   "lon": 32.54674
+  },
+  {
+   "name": "BESANIYA PRAYER MOUNTAIN",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.35298,
+   "lon": 32.74384
+  },
+  {
+   "name": "Banda Kyandaaza",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.26501,
+   "lon": 32.82177
+  },
+  {
+   "name": "Banowe hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.26727,
+   "lon": 32.5197
+  },
+  {
+   "name": "Bethany Hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.35109,
+   "lon": 32.74475
+  },
+  {
+   "name": "Bulwangi hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.2022,
+   "lon": 32.43509
+  },
+  {
+   "name": "Bumpenge hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.18888,
+   "lon": 32.42548
+  },
+  {
+   "name": "Busuwa hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.17028,
+   "lon": 32.46995
+  },
+  {
+   "name": "Buwaga hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.12736,
+   "lon": 32.55184
+  },
+  {
+   "name": "Buwerenga hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.10347,
+   "lon": 32.57185
+  },
+  {
+   "name": "Buziga Hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.25475,
+   "lon": 32.61502
+  },
+  {
+   "name": "Duleka hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.22298,
+   "lon": 32.44726
+  },
+  {
+   "name": "Duwe hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.17112,
+   "lon": 32.56482
+  },
+  {
+   "name": "Gangu hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.24204,
+   "lon": 32.59283
+  },
+  {
+   "name": "Katwe hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.18284,
+   "lon": 32.4579
+  },
+  {
+   "name": "Kibiri hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.2305,
+   "lon": 32.60073
+  },
+  {
+   "name": "Kisinsi hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.22277,
+   "lon": 32.65519
+  },
+  {
+   "name": "Kisubi Semitary Hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.11196,
+   "lon": 32.54247
+  },
+  {
+   "name": "Kitende Hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.20502,
+   "lon": 32.53543
+  },
+  {
+   "name": "Kitovo Hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.19101,
+   "lon": 32.52207
+  },
+  {
+   "name": "Kkaga Hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.19847,
+   "lon": 32.49248
+  },
+  {
+   "name": "Kololo Hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.33401,
+   "lon": 32.59301
+  },
+  {
+   "name": "Lamba hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.21901,
+   "lon": 32.45892
+  },
+  {
+   "name": "Lubaga hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.30312,
+   "lon": 32.55726
+  },
+  {
+   "name": "Lubya Hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.32987,
+   "lon": 32.54549
+  },
+  {
+   "name": "Lutaba hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.14779,
+   "lon": 32.51533
+  },
+  {
+   "name": "Luwunga hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.13686,
+   "lon": 32.57481
+  },
+  {
+   "name": "Makerere Hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.3311,
+   "lon": 32.5684
+  },
+  {
+   "name": "Makindye Hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.2757,
+   "lon": 32.59646
+  },
+  {
+   "name": "Manja hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.30184,
+   "lon": 32.4415
+  },
+  {
+   "name": "Mbozi hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.11923,
+   "lon": 32.55925
+  },
+  {
+   "name": "Mbuya Hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.32638,
+   "lon": 32.62902
+  },
+  {
+   "name": "Mpumude Hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.20253,
+   "lon": 32.45482
+  },
+  {
+   "name": "Mukono hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.26469,
+   "lon": 32.47482
+  },
+  {
+   "name": "Mulole hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.20804,
+   "lon": 32.40958
+  },
+  {
+   "name": "Mulunga Hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.21496,
+   "lon": 32.57676
+  },
+  {
+   "name": "Munkabira hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.22367,
+   "lon": 32.50685
+  },
+  {
+   "name": "Mutundwe hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.28152,
+   "lon": 32.53314
+  },
+  {
+   "name": "Muyenga Tank Hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.29383,
+   "lon": 32.61091
+  },
+  {
+   "name": "Naguru Hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.34689,
+   "lon": 32.60501
+  },
+  {
+   "name": "Nakasero Hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.32404,
+   "lon": 32.57883
+  },
+  {
+   "name": "Nakigalala hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.21803,
+   "lon": 32.52193
+  },
+  {
+   "name": "Nakitokaro hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.30045,
+   "lon": 32.46387
+  },
+  {
+   "name": "Namagoma hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.29325,
+   "lon": 32.47147
+  },
+  {
+   "name": "Nanio hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.16298,
+   "lon": 32.55014
+  },
+  {
+   "name": "Nanziqu hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.22927,
+   "lon": 32.44229
+  },
+  {
+   "name": "Ndegi hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.24728,
+   "lon": 32.57627
+  },
+  {
+   "name": "Nkokonjeru hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.29696,
+   "lon": 32.49596
+  },
+  {
+   "name": "Nongolo hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.15311,
+   "lon": 32.48525
+  },
+  {
+   "name": "Nsaggu hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.22678,
+   "lon": 32.48252
+  },
+  {
+   "name": "Nsangi hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.2777,
+   "lon": 32.45399
+  },
+  {
+   "name": "Ntunda hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.26409,
+   "lon": 32.58176
+  },
+  {
+   "name": "Prayer Mountain",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.23668,
+   "lon": 32.53508
+  },
+  {
+   "name": "Rubaga Hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.3025,
+   "lon": 32.55202
+  },
+  {
+   "name": "Sakabasolo hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.15445,
+   "lon": 32.44997
+  },
+  {
+   "name": "Sekiunga hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.16062,
+   "lon": 32.53686
+  },
+  {
+   "name": "Sekiwinga hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.17213,
+   "lon": 32.52329
+  },
+  {
+   "name": "Sekiwuga Hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.17055,
+   "lon": 32.52752
+  },
+  {
+   "name": "Sisa hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.16434,
+   "lon": 32.50198
+  },
+  {
+   "name": "Siunba hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.24319,
+   "lon": 32.47613
+  },
+  {
+   "name": "Webaja hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.17524,
+   "lon": 32.54119
+  },
+  {
+   "name": "Ziranumbu hill",
+   "kind": "peak",
+   "rank": 4,
+   "lat": 0.21483,
+   "lon": 32.59541
+  },
+  {
+   "name": "Bat Valley",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.32291,
+   "lon": 32.57359
+  },
+  {
+   "name": "Biina",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.31072,
+   "lon": 32.64781
+  },
+  {
+   "name": "Bukesa",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.32035,
+   "lon": 32.5647
+  },
+  {
+   "name": "Bulange",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.32101,
+   "lon": 32.5533
+  },
+  {
+   "name": "Bulwa zone",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.30055,
+   "lon": 32.54712
+  },
+  {
+   "name": "Butabika",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.31911,
+   "lon": 32.65666
+  },
+  {
+   "name": "Kabawo",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.29245,
+   "lon": 32.54027
+  },
+  {
+   "name": "Kabira",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.35035,
+   "lon": 32.60043
+  },
+  {
+   "name": "Kalina",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.26715,
+   "lon": 32.56893
+  },
+  {
+   "name": "Kalungu",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.27421,
+   "lon": 32.62553
+  },
+  {
+   "name": "Kamwokya",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.34376,
+   "lon": 32.59006
+  },
+  {
+   "name": "Karunga",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.29643,
+   "lon": 32.60385
+  },
+  {
+   "name": "Katalima",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.33617,
+   "lon": 32.61318
+  },
+  {
+   "name": "Katuso",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.26288,
+   "lon": 32.61395
+  },
+  {
+   "name": "Katuuso",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.26832,
+   "lon": 32.61636
+  },
+  {
+   "name": "Kawempe Mbogo",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.37107,
+   "lon": 32.56831
+  },
+  {
+   "name": "Kawuku",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.2732,
+   "lon": 32.63349
+  },
+  {
+   "name": "Kazo",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.3609,
+   "lon": 32.56024
+  },
+  {
+   "name": "Kazo Angola",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.36376,
+   "lon": 32.55408
+  },
+  {
+   "name": "Kigandazi",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.35635,
+   "lon": 32.66508
+  },
+  {
+   "name": "Kigobe",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.33643,
+   "lon": 32.53886
+  },
+  {
+   "name": "Kigowa",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.36173,
+   "lon": 32.61328
+  },
+  {
+   "name": "Kikajjo",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.25923,
+   "lon": 32.58601
+  },
+  {
+   "name": "Kikaya",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.36569,
+   "lon": 32.5868
+  },
+  {
+   "name": "Kikuubo",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.31568,
+   "lon": 32.57471
+  },
+  {
+   "name": "Kiribedda",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.30616,
+   "lon": 32.52649
+  },
+  {
+   "name": "Kirombe",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.30604,
+   "lon": 32.65418
+  },
+  {
+   "name": "Kiruddu",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.25584,
+   "lon": 32.62266
+  },
+  {
+   "name": "Kisementi",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.33905,
+   "lon": 32.58864
+  },
+  {
+   "name": "Kisugu",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.30251,
+   "lon": 32.60374
+  },
+  {
+   "name": "Kiswera",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.41628,
+   "lon": 32.76733
+  },
+  {
+   "name": "Kitante",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.33359,
+   "lon": 32.58309
+  },
+  {
+   "name": "Kitunzi",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.31036,
+   "lon": 32.54007
+  },
+  {
+   "name": "Kiwafu",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.28717,
+   "lon": 32.61521
+  },
+  {
+   "name": "Kololo Summit View",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.33337,
+   "lon": 32.59331
+  },
+  {
+   "name": "Komamboga",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.38515,
+   "lon": 32.59146
+  },
+  {
+   "name": "Kubiri",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.33797,
+   "lon": 32.57249
+  },
+  {
+   "name": "Kyanja",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.39517,
+   "lon": 32.5948
+  },
+  {
+   "name": "Kyeitabya",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.29028,
+   "lon": 32.62946
+  },
+  {
+   "name": "Kyobe",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.30879,
+   "lon": 32.54472
+  },
+  {
+   "name": "Lower Jomayi Estate",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.23512,
+   "lon": 32.53273
+  },
+  {
+   "name": "Lower Kololo",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.32562,
+   "lon": 32.59114
+  },
+  {
+   "name": "Lubya",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.33186,
+   "lon": 32.54519
+  },
+  {
+   "name": "Lugoba",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.37304,
+   "lon": 32.55311
+  },
+  {
+   "name": "Lukuli",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.28665,
+   "lon": 32.58788
+  },
+  {
+   "name": "Lukuli-Nanganda",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.28766,
+   "lon": 32.59629
+  },
+  {
+   "name": "Lungujja",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.31294,
+   "lon": 32.53797
+  },
+  {
+   "name": "Luwafu-Makindye",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.27328,
+   "lon": 32.58755
+  },
+  {
+   "name": "Makamba",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.31197,
+   "lon": 32.54662
+  },
+  {
+   "name": "Makerere Kavule",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.34435,
+   "lon": 32.56462
+  },
+  {
+   "name": "Makerere Kivulu",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.32545,
+   "lon": 32.57055
+  },
+  {
+   "name": "Masajja",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.27411,
+   "lon": 32.57226
+  },
+  {
+   "name": "Masanafu",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.33326,
+   "lon": 32.53545
+  },
+  {
+   "name": "Mawanga",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.24773,
+   "lon": 32.62622
+  },
+  {
+   "name": "Mbalwa",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.36433,
+   "lon": 32.64957
+  },
+  {
+   "name": "Ministers Village",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.35477,
+   "lon": 32.61846
+  },
+  {
+   "name": "Mpanga",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.30147,
+   "lon": 32.64055
+  },
+  {
+   "name": "Mugongo",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.28948,
+   "lon": 32.50032
+  },
+  {
+   "name": "Munaku",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.32783,
+   "lon": 32.54828
+  },
+  {
+   "name": "Muyenga",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.29911,
+   "lon": 32.61857
+  },
+  {
+   "name": "Nabutiti",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.28869,
+   "lon": 32.5991
+  },
+  {
+   "name": "Nabutiti",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.28141,
+   "lon": 32.61279
+  },
+  {
+   "name": "Naguru Hill Summit View",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.34674,
+   "lon": 32.60452
+  },
+  {
+   "name": "Najja",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.2752,
+   "lon": 32.56406
+  },
+  {
+   "name": "Nakivubo",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.31136,
+   "lon": 32.57487
+  },
+  {
+   "name": "Nalukolongo Industrial Area",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.29278,
+   "lon": 32.54415
+  },
+  {
+   "name": "Namanve",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.35438,
+   "lon": 32.68066
+  },
+  {
+   "name": "Namirembe",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.31815,
+   "lon": 32.55921
+  },
+  {
+   "name": "Namuwongo",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.31157,
+   "lon": 32.60071
+  },
+  {
+   "name": "Nanganda",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.28296,
+   "lon": 32.59743
+  },
+  {
+   "name": "Nankinga",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.26702,
+   "lon": 32.5647
+  },
+  {
+   "name": "Ndikutamadda",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.26492,
+   "lon": 32.58292
+  },
+  {
+   "name": "Nsanja Parish",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.15316,
+   "lon": 32.80184
+  },
+  {
+   "name": "Nsimbiziwoome",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.35832,
+   "lon": 32.60613
+  },
+  {
+   "name": "Nsooba",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.34949,
+   "lon": 32.57475
+  },
+  {
+   "name": "Old Kampala",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.31699,
+   "lon": 32.56859
+  },
+  {
+   "name": "Salaama",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.24796,
+   "lon": 32.61498
+  },
+  {
+   "name": "Ttula",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.3831,
+   "lon": 32.56642
+  },
+  {
+   "name": "Upper Kololo",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.32924,
+   "lon": 32.59105
+  },
+  {
+   "name": "Upper Konge",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.26636,
+   "lon": 32.60983
+  },
+  {
+   "name": "Wampewo",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.32242,
+   "lon": 32.5966
+  },
+  {
+   "name": "Wankoko",
+   "kind": "neighbourhood",
+   "rank": 5,
+   "lat": 0.32131,
+   "lon": 32.60833
+  }
+ ]
+}

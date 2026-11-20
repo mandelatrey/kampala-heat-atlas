@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatLatLon, fromUtm, gridProjection, niceScale, toUtm, utmZone } from "./geo";
+import { formatLatLon, fromUtm, gridGeo, toUtm, utmZone } from "./geo";
 
 // [lat, lon, easting, northing] from pyproj (EPSG:4326 -> EPSG:32636)
 const REF: [number, number, number, number][] = [
@@ -33,25 +33,36 @@ describe("UTM", () => {
 });
 
 describe("atlas grid", () => {
-  const proj = gridProjection({ crs: "EPSG:32636", origin: [427650, 60810], pixel: 30 }, 1659);
-  it("puts the grid's corners on the map's corners", () => {
-    const [lat, lon] = proj.toLatLon(1659, 0); // top-left of the image
-    const [y, x] = proj.toMap(lat, lon);
-    expect(y).toBeCloseTo(1659, 6);
-    expect(x).toBeCloseTo(0, 6);
+  const H = 1659, W = 1856;
+  const geo = gridGeo({ crs: "EPSG:32636", origin: [427650, 60810], pixel: 30 }, H, W);
+  it("finds the cell under a point and back", () => {
+    const [lat, lon] = geo.latLonAt(100.5, 200.5);
+    const [r, c] = geo.cellAt(lat, lon);
+    expect(r).toBeCloseTo(100.5, 6);
+    expect(c).toBeCloseTo(200.5, 6);
   });
   it("puts central Kampala in the middle of the study area", () => {
-    const [y, x] = proj.toMap(0.3136, 32.5811);
-    expect(x / 1856).toBeGreaterThan(0.4);
-    expect(x / 1856).toBeLessThan(0.5);
-    expect(y / 1659).toBeGreaterThan(0.4);
-    expect(y / 1659).toBeLessThan(0.55);
+    const [r, c] = geo.cellAt(0.3136, 32.5811);
+    expect(c / W).toBeGreaterThan(0.4);
+    expect(c / W).toBeLessThan(0.5);
+    expect(r / H).toBeGreaterThan(0.45);
+    expect(r / H).toBeLessThan(0.6);
   });
-  it("formats coordinates and scale bars", () => {
+  it("stretching the grid over its lat/lon bounds misplaces no cell by more than 10 m", () => {
+    const [[s, w], [n, e]] = geo.bounds;
+    let worst = 0;
+    for (let r = 0; r <= H; r += H / 8) {
+      for (let c = 0; c <= W; c += W / 8) {
+        const [lat, lon] = geo.latLonAt(r, c);
+        const dLat = lat - (n - (r / H) * (n - s));
+        const dLon = lon - (w + (c / W) * (e - w));
+        worst = Math.max(worst, Math.hypot(dLat * 110574, dLon * 111320 * Math.cos((lat * Math.PI) / 180)));
+      }
+    }
+    expect(worst).toBeLessThan(10);
+  });
+  it("formats coordinates", () => {
     expect(formatLatLon(0.31361, 32.58114)).toBe("0.3136° N, 32.5811° E");
     expect(formatLatLon(-1.2864, 36.8172)).toBe("1.2864° S, 36.8172° E");
-    expect(niceScale(3400)).toEqual({ metres: 2000, label: "2 km" });
-    expect(niceScale(740)).toEqual({ metres: 500, label: "500 m" });
-    expect(niceScale(10000)).toEqual({ metres: 10000, label: "10 km" });
   });
 });

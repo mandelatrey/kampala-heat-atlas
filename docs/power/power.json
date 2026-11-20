@@ -1,0 +1,220 @@
+{
+ "generated": "2026-11-19",
+ "log_rows": 49,
+ "near_logged_km": 1.0,
+ "hours_per_cut_day": 24.0,
+ "reported_hours": [
+  2,
+  1,
+  0,
+  0,
+  0,
+  1,
+  0,
+  0,
+  3,
+  3,
+  4,
+  0,
+  0,
+  0,
+  1,
+  0,
+  1,
+  1,
+  3,
+  5,
+  4,
+  3,
+  1,
+  1
+ ],
+ "published": [
+  {
+   "areas": [
+    "Lugogo",
+    "Nakawa",
+    "Ntinda",
+    "Kireka"
+   ],
+   "lat": 0.33899,
+   "lon": 32.62016,
+   "radius_km": 6.0,
+   "from": "2022-01-01",
+   "to": "2022-12-31",
+   "cuts_per_month": 5.5,
+   "hours_per_month": 6.26,
+   "hours_per_cut": 1.14,
+   "basis": "measured",
+   "qualifier": "",
+   "label": "Kampala East network (Lugogo, Nakawa, Ntinda and Kireka substations)",
+   "source": "Nalima et al. 2023, from Umeme's control-room records",
+   "url": "https://doi.org/10.59568/KJSET-2023-2-1-08",
+   "note": "Average customer: 5.65 cuts and 8.34 h a month in Jan-Jun 2022, 5.35 cuts and 4.18 h in Jul-Dec; main causes momentary faults 35 %, broken jumpers 25 %, conductors 9 %"
+  },
+  {
+   "areas": [
+    "Kitala"
+   ],
+   "lat": 0.11365,
+   "lon": 32.51949,
+   "radius_km": 5.0,
+   "from": "2024-01-01",
+   "to": "2024-12-31",
+   "cuts_per_month": 2.85,
+   "hours_per_month": 4.48,
+   "hours_per_cut": 1.57,
+   "basis": "measured",
+   "qualifier": "",
+   "label": "Kitala 11 kV line (Kampala West)",
+   "source": "Ssekaayi et al. 2025, from Umeme and UEDCL outage records",
+   "url": "https://asric.africa/engineering-sciences",
+   "note": "SAIDI 53.81 h and SAIFI 34.21 a year; 40 km line, 13,273 customers, sections loaded to 95 %"
+  },
+  {
+   "areas": [
+    "Najjera",
+    "Kiwatule",
+    "Kigowa",
+    "Buwate"
+   ],
+   "lat": 0.38257,
+   "lon": 32.62199,
+   "radius_km": 3.0,
+   "from": "2019-08-01",
+   "to": "2019-10-31",
+   "cuts_per_month": 13.0,
+   "hours_per_month": null,
+   "hours_per_cut": null,
+   "basis": "reported",
+   "qualifier": "up to",
+   "label": "Kigowa, Kiwatule, Buwate and Najjera",
+   "source": "CEO East Africa, 27 Nov 2019, citing a source at Umeme",
+   "url": "https://www.ceo.co.ug/13-power-cuts-a-month-kiwatule-najjera-residents-suffer-as-umeme-and-era-dilly-dally-over-3-5m-investment-into-ntinda-substation/",
+   "note": "Blamed on the overloaded Ntinda substation"
+  }
+ ],
+ "areas": [
+  {
+   "name": "Bulenga",
+   "lat": 0.3216,
+   "lon": 32.50312,
+   "basis": "reports only",
+   "first": "2011-11-18",
+   "last": "2022-08-09",
+   "days": 3918,
+   "cut_days": 4,
+   "cut_days_week": 0.01,
+   "hours_week": null,
+   "kinds": {
+    "planned": 0,
+    "unknown": 4,
+    "unplanned": 0
+   },
+   "sources": [
+    "X complaint"
+   ]
+  },
+  {
+   "name": "Kisaasi",
+   "lat": 0.3629,
+   "lon": 32.59973,
+   "basis": "reports only",
+   "first": "2019-09-13",
+   "last": "2025-11-21",
+   "days": 2262,
+   "cut_days": 10,
+   "cut_days_week": 0.03,
+   "hours_week": null,
+   "kinds": {
+    "planned": 0,
+    "unknown": 10,
+    "unplanned": 0
+   },
+   "sources": [
+    "X complaint"
+   ]
+  },
+  {
+   "name": "Najjera",
+   "lat": 0.38731,
+   "lon": 32.62523,
+   "basis": "reports only",
+   "first": "2019-11-29",
+   "last": "2024-08-06",
+   "days": 1713,
+   "cut_days": 8,
+   "cut_days_week": 0.03,
+   "hours_week": null,
+   "kinds": {
+    "planned": 0,
+    "unknown": 8,
+    "unplanned": 0
+   },
+   "sources": [
+    "X complaint"
+   ]
+  },
+  {
+   "name": "Seeta",
+   "lat": 0.36674,
+   "lon": 32.71313,
+   "basis": "reports only",
+   "first": "2019-01-11",
+   "last": "2026-11-18",
+   "days": 2869,
+   "cut_days": 15,
+   "cut_days_week": 0.04,
+   "hours_week": null,
+   "kinds": {
+    "planned": 0,
+    "unknown": 15,
+    "unplanned": 0
+   },
+   "sources": [
+    "X complaint"
+   ]
+  },
+  {
+   "name": "Seguku",
+   "lat": 0.23254,
+   "lon": 32.55136,
+   "basis": "reports only",
+   "first": "2011-10-31",
+   "last": "2023-07-28",
+   "days": 4289,
+   "cut_days": 5,
+   "cut_days_week": 0.01,
+   "hours_week": null,
+   "kinds": {
+    "planned": 0,
+    "unknown": 5,
+    "unplanned": 0
+   },
+   "sources": [
+    "X complaint"
+   ]
+  },
+  {
+   "name": "Ssumbwe",
+   "lat": 0.3174,
+   "lon": 32.49021,
+   "basis": "reports only",
+   "first": "2024-10-17",
+   "last": "2024-10-21",
+   "days": 5,
+   "cut_days": 5,
+   "cut_days_week": 7.0,
+   "hours_week": 168.0,
+   "kinds": {
+    "planned": 0,
+    "unknown": 5,
+    "unplanned": 0
+   },
+   "sources": [
+    "X complaint"
+   ]
+  }
+ ],
+ "planned": []
+}

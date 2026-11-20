@@ -1,53 +1,80 @@
-// Shape of docs/atlas/atlas.json, written by scripts/14_atlas.py. Paths are relative to docs/atlas/.
+// Shape of docs/atlas/atlas.json, written by scripts/14_atlas.py (layer encoding: src/kampala/weblayers.py).
+// Paths are relative to docs/atlas/. Numbers and charts are in stats.json (see stats.ts).
 
-/** Headline numbers, already formatted by Python (e.g. "1,516", "+1.0", "82–83"). */
-export type NumberKey =
-  | "built0" | "built2" | "builtpct" | "hot0" | "hot2" | "inf" | "formal" | "became" | "formalchg"
-  | "cool10" | "treecool" | "treepeople" | "newcanopy" | "vh_people" | "vh_km2"
-  | "gwp" | "twh" | "roofs" | "yield_" | "r_min" | "r_max" | "agree";
+/** Categorical layer: stored value -> colour and name. 0 (or any value not listed) is drawn empty. */
+export interface ClassStyle {
+  kind: "classes";
+  classes: { value: number; color: string; name: string }[];
+}
 
-export type RampKey = "diverging" | "sequential";
+/** Continuous layer: `colors` spread evenly from min to max; values outside are clamped. */
+export interface RampStyle {
+  kind: "ramp";
+  colors: string[];
+  /** Missing for the older PNG layers, whose colours are already baked in. */
+  min?: number;
+  max?: number;
+  /** Legend text under the low end, the middle and the high end. */
+  labels: [low: string, mid: string, high: string];
+  /** Values under this are drawn transparent (they stay in the data). */
+  hide_below?: number;
+}
 
-interface LayerBase {
+/** How stored integers become values: value = stored * scale + offset; `nodata` means no value. */
+export interface ValueSpec {
+  scale: number;
+  offset: number;
+  nodata: number;
+  unit?: string;
+  decimals?: number;
+  /** Show a + on positive values. */
+  signed?: boolean;
+  /** How to word a value; {v} is the formatted number, e.g. "{v} °C vs the city average". */
+  readout?: string;
+}
+
+export interface AtlasLayer {
   id: string;
   /** Panel group, e.g. "Heat", "Growth". */
   group: string;
   label: string;
   caption: string;
-  /** Transparent PNG on the shared grid, e.g. "layers/thermal-2025.png". */
+  style: ClassStyle | RampStyle;
+  /**
+   * With `values`: a GeoTIFF on the shared grid that the page colours itself (and can read values from).
+   * Without: a ready-coloured PNG on the same grid (atlas.json files written before the data export).
+   */
   src: string;
+  values?: ValueSpec;
 }
-
-/** Categorical layer: one swatch per class, [colour, name]. */
-export interface ClassLayer extends LayerBase {
-  kind: "classes";
-  legend: [color: string, name: string][];
-}
-
-/** Continuous layer: [low label, middle label, high label, ramp]. */
-export interface RampLayer extends LayerBase {
-  kind: "ramp";
-  legend: [low: string, mid: string, high: string, ramp: RampKey];
-}
-
-export type AtlasLayer = ClassLayer | RampLayer;
-
-export type ChartKey = "lcz" | "traj" | "class" | "solar" | "trees" | "cube";
-export type AnimKey = "wind" | "cube";
 
 export interface Atlas {
-  /** Grid size in pixels, [height, width]; the map uses it as image bounds. */
+  /** Grid size in pixels, [height, width]. */
   size: [number, number];
   /** The three epochs, e.g. [2017, 2021, 2025]. */
   years: [number, number, number];
-  numbers: Record<NumberKey, string>;
-  /** CSS gradients for the ramp legends. */
-  ramps: Record<RampKey, string>;
-  /** Hillshade under every layer. */
+  /** Relief shading on the same grid, an optional layer under the data. */
   base: string;
-  /** Where the grid sits on the Earth (older atlas.json files lack it; the map then has no names or coordinates). */
-  grid?: import("./geo").Grid;
+  /** Where the grid sits on the Earth (UTM). */
+  grid: import("./geo").Grid;
   layers: AtlasLayer[];
-  charts: Record<ChartKey, string>;
-  anims: Record<AnimKey, string>;
+  /** Animations from the older atlas.json; the wind GIF is shown only until stats.json has the wind table. */
+  anims?: Partial<Record<"wind", string>>;
+}
+
+// ---- atlas.json as written before the data export (layers as coloured PNGs); data.ts converts it
+
+export interface OldLayer {
+  id: string;
+  group: string;
+  label: string;
+  caption: string;
+  src: string;
+  kind: "classes" | "ramp";
+  legend: [string, string][] | [string, string, string, string];
+}
+
+export interface OldAtlas extends Omit<Atlas, "layers"> {
+  layers: OldLayer[];
+  ramps: Record<string, string>;
 }

@@ -1,0 +1,15 @@
+{
+ "quarter": "2026-Q4",
+ "valid": "1 October to 31 December 2026",
+ "source": "Electricity Regulatory Authority (ERA): UEDCL end-user tariffs for Q3 2026, held unchanged for Q4 2026",
+ "url": "https://www.era.go.ug/era-approves-electricity-tariffs-for-the-third-quarter-of-2026/",
+ "currency": "UGX",
+ "per": "kWh (one unit), VAT and any fixed charges not included",
+ "domestic": {
+  "energy": 779.4,
+  "lifeline": {"units": 15, "price": 250, "max_monthly_average": 100},
+  "cooking": {"from": 81, "to": 150, "price": 412}
+ },
+ "commercial": {"energy": 562.1},
+ "notes": "Update every quarter from ERA's tariff schedules (https://www.era.go.ug/tariff-schedules/). The lifeline price applies to the first 15 units for homes whose six-month average use is 100 units a month or less; the cooking price applies to units 81 to 150 for customers registered for it."
+}

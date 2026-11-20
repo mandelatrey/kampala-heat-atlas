@@ -18,6 +18,11 @@ describe("parseRoute", () => {
     expect(parseRoute("#/site-weather")).toEqual({ page: "sites" });
     expect(parseRoute("#/site-weather/central-kampala")).toEqual({ page: "site", slug: "central-kampala" });
   });
+  it("routes the heat advisory, for a town or the default", () => {
+    expect(parseRoute("#/heat")).toEqual({ page: "heat" });
+    expect(parseRoute("#/heat/jinja")).toEqual({ page: "heat", slug: "jinja" });
+    expect(parseRoute("#/heat/Bad Name").page).toBe("missing");
+  });
   it("rejects anything else", () => {
     expect(parseRoute("#/site-weather/a/b").page).toBe("missing");
     expect(parseRoute("#/site-weather/Bad Name").page).toBe("missing");

@@ -66,6 +66,14 @@ export function useSite(slug: string): Load<SiteData> {
   });
 }
 
+/** The site list (docs/site-weather/sites.json), for pickers. */
+export function useSiteList(): Load<SiteList> {
+  return useLoad("site-list", () => getJson<SiteList>("site-weather/sites.json"));
+}
+
+/** A site's folder name, as scripts/29_site_weather.py makes it: "Central Kampala" -> "central-kampala". */
+export const slugOf = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
 export function useTowns(): Load<TownsToday & { groups: Record<string, string> }> {
   return useLoad("towns", async () => {
     const [towns, sites] = await Promise.all([getJson<TownsToday>("site-weather/towns_today.json"), getJson<SiteList>("site-weather/sites.json")]);

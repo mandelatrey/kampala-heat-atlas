@@ -1,0 +1,50 @@
+area,lat,lon,date,hours_off,cuts,kind,start,end,reported,source,notes
+Bulenga,,,2011-11-18,,,unknown,,,10:34,X complaint,year as given (2011); check
+Bulenga,,,2020-12-25,,,unknown,,,10:37,X complaint,
+Bulenga,,,2021-11-14,,,unknown,,,14:13,X complaint,
+Bulenga,,,2022-08-09,,,unknown,,,18:28,X complaint,
+Kisaasi,,,2019-09-13,,,unknown,,,17:57,X complaint,
+Kisaasi,,,2020-05-16,,,unknown,,,05:25,X complaint,
+Kisaasi,,,2021-01-23,,,unknown,,,22:28,X complaint,
+Kisaasi,,,2023-04-23,,,unknown,,,20:13,X complaint,
+Kisaasi,,,2024-03-24,,,unknown,,,00:08,X complaint,
+Kisaasi,,,2024-04-04,,,unknown,,,20:41,X complaint,
+Kisaasi,,,2024-08-20,,,unknown,,,21:43,X complaint,
+Kisaasi,,,2024-09-22,,,unknown,,,18:31,X complaint,
+Kisaasi,,,2024-09-26,,,unknown,,,19:59,X complaint,
+Kisaasi,,,2025-11-21,,,unknown,,,16:25,X complaint,
+Najjera,,,2019-11-29,,,unknown,,,09:26,X complaint,
+Najjera,,,2019-12-25,,,unknown,,,10:00,X complaint,
+Najjera,,,2020-04-13,0,,unknown,,,,X complaint,power was on
+Najjera,,,2020-05-09,0,,unknown,,,,X complaint,power was on
+Najjera,,,2021-02-02,,,unknown,,,18:45,X complaint,
+Najjera,,,2022-01-04,,,unknown,,,20:26,X complaint,
+Najjera,,,2022-03-09,,,unknown,,,19:21,X complaint,
+Najjera,,,2022-06-02,,,unknown,,,,X complaint,
+Najjera,,,2024-04-02,,,unknown,,,20:03,X complaint,
+Najjera,,,2024-08-06,,,unknown,,,23:13,X complaint,
+Seeta,,,2019-01-11,,,unknown,,,00:12,X complaint,
+Seeta,,,2019-10-05,,,unknown,,,08:33,X complaint,
+Seeta,,,2022-12-07,,,unknown,,,21:42,X complaint,
+Seeta,,,2022-12-20,,,unknown,,,09:40,X complaint,
+Seeta,,,2023-08-13,,,unknown,,,19:10,X complaint,
+Seeta,,,2023-12-22,,,unknown,,,10:42,X complaint,
+Seeta,,,2025-09-12,,,unknown,,,,X complaint,"Seeta Banjo, all day"
+Seeta,,,2025-12-15,,,unknown,,21:00,,X complaint,complaint on 2025-12-20: off every day that week until 9 pm (start time unclear: 7 am or 7 pm)
+Seeta,,,2025-12-16,,,unknown,,21:00,,X complaint,complaint on 2025-12-20: off every day that week until 9 pm (start time unclear: 7 am or 7 pm)
+Seeta,,,2025-12-17,,,unknown,,21:00,,X complaint,complaint on 2025-12-20: off every day that week until 9 pm (start time unclear: 7 am or 7 pm)
+Seeta,,,2025-12-18,,,unknown,,21:00,,X complaint,complaint on 2025-12-20: off every day that week until 9 pm (start time unclear: 7 am or 7 pm)
+Seeta,,,2025-12-19,,,unknown,,21:00,,X complaint,complaint on 2025-12-20: off every day that week until 9 pm (start time unclear: 7 am or 7 pm)
+Seeta,,,2025-12-20,,,unknown,,21:00,,X complaint,complaint on 2025-12-20: off every day that week until 9 pm (start time unclear: 7 am or 7 pm)
+Seeta,,,2026-02-27,,,unknown,,,08:31,X complaint,
+Seeta,,,2026-11-18,,,unknown,,,21:34,X complaint,
+Seguku,,,2011-10-31,,,unknown,,,09:16,X complaint,year as given (2011); check
+Seguku,,,2019-06-26,,,unknown,,,01:05,X complaint,
+Seguku,,,2020-07-28,,,unknown,,,08:28,X complaint,
+Seguku,,,2022-12-07,,,unknown,,,19:43,X complaint,
+Seguku,,,2023-07-28,,,unknown,,,19:44,X complaint,some areas had power
+Ssumbwe,,,2024-10-17,24,,unknown,,,,X complaint,"complaint on 2024-10-21: five days without power (Bulenga, Sumbwe)"
+Ssumbwe,,,2024-10-18,24,,unknown,,,,X complaint,"complaint on 2024-10-21: five days without power (Bulenga, Sumbwe)"
+Ssumbwe,,,2024-10-19,24,,unknown,,,,X complaint,"complaint on 2024-10-21: five days without power (Bulenga, Sumbwe)"
+Ssumbwe,,,2024-10-20,24,,unknown,,,,X complaint,"complaint on 2024-10-21: five days without power (Bulenga, Sumbwe)"
+Ssumbwe,,,2024-10-21,24,,unknown,,,,X complaint,"complaint on 2024-10-21: five days without power (Bulenga, Sumbwe)"

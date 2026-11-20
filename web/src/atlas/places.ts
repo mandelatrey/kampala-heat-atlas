@@ -4,7 +4,7 @@ import { getJson, useLoad, type Load } from "../data";
 export interface Place {
   name: string;
   kind: string;
-  /** 1 = always shown (cities) ... 5 = only close in (neighbourhoods). */
+  /** 1 = city ... 5 = neighbourhood. */
   rank: number;
   lat: number;
   lon: number;
@@ -23,42 +23,6 @@ export function usePlaces(): Load<Places> {
   return useLoad("places", () => getJson<Places>("atlas/places.json").catch(() => NONE));
 }
 
-/** Lowest zoom at which each rank is labelled (Leaflet CRS.Simple zoom; the whole area fits at about -1). */
-export const MIN_ZOOM: Record<number, number> = { 1: -99, 2: -1.6, 3: -0.8, 4: 0, 5: 0.75 };
-
-export interface Box { x: number; y: number; w: number; h: number }
-
-/** Rough screen size of a label, px. */
-export function labelBox(p: Place, x: number, y: number): Box {
-  const size = p.rank <= 1 ? 15 : p.rank === 2 ? 13.5 : 12.5;
-  const w = p.name.length * size * 0.56 + 10;
-  const h = size + 8;
-  return { x: x - w / 2, y: y - h / 2, w, h };
-}
-
-const overlaps = (a: Box, b: Box) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
-
-/**
- * Which places to label: those whose rank shows at this zoom and that are on screen, best rank first,
- * skipping any that would overlap a label already placed.
- */
-export function chooseLabels(
-  places: Place[], zoom: number, toScreen: (p: Place) => [number, number], view: { w: number; h: number },
-): Place[] {
-  const placed: Box[] = [];
-  const chosen: Place[] = [];
-  for (const p of [...places].sort((a, b) => a.rank - b.rank)) {
-    if (zoom < (MIN_ZOOM[p.rank] ?? 99)) continue;
-    const [x, y] = toScreen(p);
-    if (x < -40 || y < -20 || x > view.w + 40 || y > view.h + 20) continue;
-    const box = labelBox(p, x, y);
-    if (placed.some((b) => overlaps(b, box))) continue;
-    placed.push(box);
-    chosen.push(p);
-  }
-  return chosen;
-}
-
 /** The closest place to a point, with its distance in km, if one is within maxKm. */
 export function nearest(places: Place[], lat: number, lon: number, maxKm = 4): { place: Place; km: number } | null {
   let best: { place: Place; km: number } | null = null;
@@ -68,4 +32,52 @@ export function nearest(places: Place[], lat: number, lon: number, maxKm = 4): {
     if (km <= maxKm && (!best || km < best.km)) best = { place: p, km };
   }
   return best;
+}
+
+/** Lower case, accents and punctuation removed: "Kasubi Hill" and "kasubi-hill" match. */
+export const normalise = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+/**
+ * Places matching a typed query, best first: whole name, then name start, then a word start, then anywhere;
+ * bigger places (lower rank) first within each, then shorter names.
+ */
+export function searchPlaces(places: Place[], query: string, limit = 8): Place[] {
+  const q = normalise(query);
+  if (q.length < 2) return [];
+  const score = (p: Place) => {
+    const n = normalise(p.name);
+    if (n === q) return 0;
+    if (n.startsWith(q)) return 1;
+    if (n.split(" ").some((w) => w.startsWith(q))) return 2;
+    return n.includes(q) ? 3 : 9;
+  };
+  return places
+    .map((p) => ({ p, s: score(p) }))
+    .filter((x) => x.s < 9)
+    .sort((a, b) => a.s - b.s || a.p.rank - b.p.rank || a.p.name.length - b.p.name.length || a.p.name.localeCompare(b.p.name))
+    .slice(0, limit)
+    .map((x) => x.p);
+}
+
+const KIND_WORD: Record<string, string> = {
+  city: "city", town: "town", suburb: "suburb", quarter: "area", neighbourhood: "neighbourhood", village: "area",
+  island: "island", hill: "hill", peak: "hill",
+};
+
+/** A short line that tells same-named places apart: "suburb near Kawempe". */
+export function placeContext(p: Place, places: Place[]): string {
+  const word = KIND_WORD[p.kind] ?? "place";
+  const bigger = places.filter((o) => o.rank <= 3 && normalise(o.name) !== normalise(p.name));
+  const near = nearest(bigger, p.lat, p.lon, 12);
+  return near ? `${word} ${near.km < 1.5 ? "in" : "near"} ${near.place.name}` : word;
+}
+
+/** At most `max` places, biggest first, none within `minKm` of one already kept: labels that do not crowd. */
+export function thinPlaces(places: Place[], minKm = 0.4, max = 15): Place[] {
+  const kept: Place[] = [];
+  for (const p of [...places].sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name))) {
+    if (kept.length >= max) break;
+    if (!nearest(kept, p.lat, p.lon, minKm)) kept.push(p);
+  }
+  return kept;
 }

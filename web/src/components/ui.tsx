@@ -28,6 +28,8 @@ export const Icon = {
   wind: ({ size = 14, ...p }: IconProps) => svg(size, p, <path d="M3 9h11a3 3 0 1 0-3-3M3 15h15a3 3 0 1 1-3 3" />),
   heat: ({ size = 14, ...p }: IconProps) => svg(size, p, <><path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z" /><path d="M12 11v5" /></>),
   info: ({ size = 14, ...p }: IconProps) => svg(size, p, <><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 7.8v.1" /></>),
+  play: ({ size = 14, ...p }: IconProps) => svg(size, p, <path d="M7 4.5v15l12.5-7.5z" fill="currentColor" />),
+  pause: ({ size = 14, ...p }: IconProps) => svg(size, p, <path d="M8 5v14M16 5v14" strokeWidth={3} />),
 };
 
 const TONE_ICON: Record<Tone, (p: IconProps) => ReactNode> = { good: Icon.check, warning: Icon.alert, critical: Icon.stop };

@@ -6,7 +6,7 @@ paths:
   figures_root: "~/kampala-thesis-data/figures"   # outside OneDrive: it times out on large GIF writes
 
 earth_engine:
-  project: "thermal-classification"   # registered non-commercial (no Restricted Mode); EE asset root not yet created
+  project: "heatmap-515116"  # registered non-commercial (no Restricted Mode); EE asset root not yet created
   export_folder: "kampala_thesis"  # Google Drive folder for EE exports
 
 study_area:

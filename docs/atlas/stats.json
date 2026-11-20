@@ -1,0 +1,371 @@
+{
+ "generated": "2026-11-19",
+ "years": [
+  2017,
+  2021,
+  2025
+ ],
+ "numbers": {
+  "built_km2": [
+   657.7757,
+   804.0322,
+   909.3013
+  ],
+  "sparse_to_dense_km2": 112.0502,
+  "label_agreement": [
+   0.8197767145135566,
+   0.8343974461292897
+  ],
+  "kappa": [
+   0.7825051917135187,
+   0.8004888836708557
+  ],
+  "validation_points": 350,
+  "hot_km2": [
+   220.0707,
+   214.7094,
+   235.7109
+  ],
+  "lst_r": [
+   0.8132042486649018,
+   0.947894334773867
+  ],
+  "c2st_coverage": [
+   0.6431861883757507,
+   0.6800990439607207
+  ],
+  "hottest_lcz": [
+   "compact low-rise",
+   "compact mid-rise"
+  ],
+  "fastest_warming_lcz": "large low-rise",
+  "fastest_warming_lcz_change": 0.976872444152832,
+  "dense_trees_anom": -2.1975550651550293,
+  "informal_anom": 6.298470497131348,
+  "formal_dense_anom": 5.270629405975342,
+  "became_informal_change": 1.0396313667297363,
+  "always_formal_change": 0.377476692199707,
+  "sdi_anom": [
+   5.208416,
+   5.8673058
+  ],
+  "sdi_dense_anom": [
+   5.418855,
+   5.5258293
+  ],
+  "sdi_change": [
+   0.35421038,
+   0.53867435
+  ],
+  "sdi_dense_change": [
+   0.62235737,
+   0.6625867
+  ],
+  "sdi_detected_share": [
+   0.2080123266563944,
+   0.2899094033114651
+  ],
+  "cooling_per_10pct_canopy": 0.3881981033104537,
+  "planting_cooling": 1.3616333924146358,
+  "planting_new_canopy_km2": 49.956298828125,
+  "planting_people": 553952.625,
+  "cooling_model_r2": 0.3216310953724237,
+  "very_high_km2": 47.475,
+  "very_high_people": 319277.71875,
+  "very_high_tree_pct": 0.3300684737041592,
+  "roofs": 2006253.0,
+  "solar_gwp": 22.005383367095867,
+  "solar_gwh": 33366.869288729315,
+  "solar_yield": 1516.3048392341127,
+  "solar_top10_gwh": 12517.581224071677,
+  "national_sales_gwh": 4674.0,
+  "noon_sun_min_deg": 66.24640000000001,
+  "centre_lat": 0.3136,
+  "low_tilt_max_loss_pct": 1.2852234744310742,
+  "east_west_wall_ratio": 2.1242539443545794
+ },
+ "charts": {
+  "landcover": {
+   "source": "m1_class_area.csv",
+   "years": [
+    2017,
+    2021,
+    2025
+   ],
+   "classes": [
+    {
+     "name": "built dense",
+     "color": "#c23434",
+     "km2": [
+      223.7807,
+      278.9067,
+      350.7999
+     ]
+    },
+    {
+     "name": "built sparse",
+     "color": "#f29068",
+     "km2": [
+      433.995,
+      525.1255,
+      558.5014
+     ]
+    },
+    {
+     "name": "tree cover",
+     "color": "#2f8f3a",
+     "km2": [
+      657.9141,
+      799.0856,
+      791.909
+     ]
+    },
+    {
+     "name": "grass / cropland",
+     "color": "#d6e8a0",
+     "km2": [
+      934.9384,
+      670.6962,
+      578.8655
+     ]
+    },
+    {
+     "name": "bare soil",
+     "color": "#c9b38b",
+     "km2": [
+      102.6551,
+      85.3822,
+      72.5017
+     ]
+    },
+    {
+     "name": "wetland",
+     "color": "#5fb7c4",
+     "km2": [
+      174.8577,
+      165.0231,
+      169.3496
+     ]
+    },
+    {
+     "name": "water",
+     "color": "#256abf",
+     "km2": [
+      240.4465,
+      244.3682,
+      246.6604
+     ]
+    }
+   ]
+  },
+  "lcz": {
+   "source": "m2_lst_by_lcz.csv",
+   "years": [
+    2017,
+    2025
+   ],
+   "series_colors": [
+    "#2a78d6",
+    "#eb6834"
+   ],
+   "zones": [
+    {
+     "name": "A dense trees",
+     "values": [
+      -2.230336427688598,
+      -2.1975550651550293
+     ]
+    },
+    {
+     "name": "B scattered trees",
+     "values": [
+      -0.9419933557510376,
+      -1.259111404418945
+     ]
+    },
+    {
+     "name": "D low plants",
+     "values": [
+      -0.2202692627906799,
+      -0.722308337688446
+     ]
+    },
+    {
+     "name": "C bush, scrub",
+     "values": [
+      1.0139222145080566,
+      -0.2558628916740417
+     ]
+    },
+    {
+     "name": "9 sparsely built",
+     "values": [
+      -0.0590106174349784,
+      -0.1010699644684791
+     ]
+    },
+    {
+     "name": "6 open low-rise",
+     "values": [
+      1.946850061416626,
+      2.580944299697876
+     ]
+    },
+    {
+     "name": "5 open mid-rise",
+     "values": [
+      4.176787853240967,
+      3.38765025138855
+     ]
+    },
+    {
+     "name": "8 large low-rise",
+     "values": [
+      4.288732051849365,
+      5.265604496002197
+     ]
+    },
+    {
+     "name": "2 compact mid-rise",
+     "values": [
+      7.532211780548096,
+      5.51893424987793
+     ]
+    },
+    {
+     "name": "3 compact low-rise",
+     "values": [
+      5.588172912597656,
+      5.812157154083252
+     ]
+    }
+   ]
+  },
+  "trajectories": {
+   "source": "m3_thermal_trajectories.csv",
+   "years": [
+    2017,
+    2021,
+    2025
+   ],
+   "series": [
+    {
+     "name": "always informal-type",
+     "color": "#2a78d6",
+     "values": [
+      6.71064567565918,
+      7.26594066619873,
+      7.156045913696289
+     ],
+     "km2": 7.541099999999999
+    },
+    {
+     "name": "always formal dense",
+     "color": "#eb6834",
+     "values": [
+      5.180933475494385,
+      5.194305419921875,
+      5.558410167694092
+     ],
+     "km2": 11.866499999999998
+    },
+    {
+     "name": "became informal-type",
+     "color": "#1baf7a",
+     "values": [
+      4.835058689117432,
+      5.7209014892578125,
+      5.874690055847168
+     ],
+     "km2": 19.8693
+    }
+   ]
+  },
+  "solar": {
+   "source": "m5_solar_scenarios.csv",
+   "series_colors": [
+    "#eb6834",
+    "#2a78d6"
+   ],
+   "scenarios": [
+    {
+     "adoption": "10% of roofs",
+     "largest_first_gwh": 12517.581224071677,
+     "random_gwh": 3336.6869288729317
+    },
+    {
+     "adoption": "25% of roofs",
+     "largest_first_gwh": 20491.188910179902,
+     "random_gwh": 8341.717322182329
+    },
+    {
+     "adoption": "50% of roofs",
+     "largest_first_gwh": 28050.654101328262,
+     "random_gwh": 16683.434644364657
+    },
+    {
+     "adoption": "100% of roofs",
+     "largest_first_gwh": 33366.869288729315,
+     "random_gwh": 33366.869288729315
+    }
+   ],
+   "benchmark": {
+    "label": "national sales 2024 (Umeme)",
+    "gwh": 4674.0
+   }
+  },
+  "trees": {
+   "source": "m4_priority_summary.csv",
+   "classes": [
+    {
+     "name": "low",
+     "color": "#a8dca8",
+     "people": 294885.15625,
+     "plantable_km2": 439.37591552734375,
+     "km2": 664.6437
+    },
+    {
+     "name": "medium",
+     "color": "#74c474",
+     "people": 176387.390625,
+     "plantable_km2": 111.18930053710938,
+     "km2": 142.4232
+    },
+    {
+     "name": "high",
+     "color": "#008300",
+     "people": 234674.90625,
+     "plantable_km2": 70.18789672851562,
+     "km2": 94.9491
+    },
+    {
+     "name": "very high",
+     "color": "#004700",
+     "people": 319277.71875,
+     "plantable_km2": 29.72470092773437,
+     "km2": 47.475
+    }
+   ]
+  }
+ },
+ "tables": {
+  "m0_clear_sky_tilt_azimuth.csv": "tables/m0_clear_sky_tilt_azimuth.csv",
+  "m0_facade_direct_beam.csv": "tables/m0_facade_direct_beam.csv",
+  "m1_class_area.csv": "tables/m1_class_area.csv",
+  "m1_t1_diagnostics.json": "tables/m1_t1_diagnostics.json",
+  "m1_t2_diagnostics.json": "tables/m1_t2_diagnostics.json",
+  "m1_t3_diagnostics.json": "tables/m1_t3_diagnostics.json",
+  "m1_transitions_2017_2025_km2.csv": "tables/m1_transitions_2017_2025_km2.csv",
+  "m2_lst_by_lcz.csv": "tables/m2_lst_by_lcz.csv",
+  "m2_lst_calibration.csv": "tables/m2_lst_calibration.csv",
+  "m2_thermal_class_area.csv": "tables/m2_thermal_class_area.csv",
+  "m3_lst_by_settlement_group.csv": "tables/m3_lst_by_settlement_group.csv",
+  "m3_sdi_sensitivity.csv": "tables/m3_sdi_sensitivity.csv",
+  "m3_thermal_trajectories.csv": "tables/m3_thermal_trajectories.csv",
+  "m4_planting_scenario.csv": "tables/m4_planting_scenario.csv",
+  "m4_priority_summary.csv": "tables/m4_priority_summary.csv",
+  "m5_solar_scenarios.csv": "tables/m5_solar_scenarios.csv",
+  "m5_solar_totals.csv": "tables/m5_solar_totals.csv",
+  "m5_solar_vs_demand.csv": "tables/m5_solar_vs_demand.csv"
+ }
+}

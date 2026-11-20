@@ -28,3 +28,24 @@ export function useTheme(): [ThemeChoice, (t: ThemeChoice) => void] {
   }, [theme]);
   return [theme, setTheme];
 }
+
+/** Whether the page is showing its dark theme now: a chosen theme, or the system's when set to follow it. */
+export function useIsDark(): boolean {
+  const get = () => {
+    const t = document.documentElement.getAttribute("data-theme");
+    return t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const [dark, setDark] = useState(get);
+  useEffect(() => {
+    const update = () => setDark(get());
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    mq.addEventListener("change", update);
+    const mo = new MutationObserver(update);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => {
+      mq.removeEventListener("change", update);
+      mo.disconnect();
+    };
+  }, []);
+  return dark;
+}

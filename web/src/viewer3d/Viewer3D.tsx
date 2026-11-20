@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { RAMPS, SHADE_STOPS, type ColourKey } from "./colours";
 import { canUseWebGL2, useDistrict, useDistricts } from "./data";
-import { usePlaces } from "../atlas/places";
+import { thinPlaces, usePlaces } from "../atlas/places";
 import { Scene } from "./Scene";
 import { clock, compass, DAYS, sunPosition, timestamp, type DayKey } from "./sun";
 import type { DistrictMeta } from "./types";
@@ -67,7 +67,8 @@ export function Viewer3D() {
   const inDistrict = useMemo(() => {
     if (!meta || placesLoad.state !== "ready") return [];
     const [w, s, e, n] = meta.bounds;
-    return placesLoad.data.places.filter((p) => p.lon >= w && p.lon <= e && p.lat >= s && p.lat <= n);
+    // the bigger places, spaced out: a district can hold dozens of OpenStreetMap names
+    return thinPlaces(placesLoad.data.places.filter((p) => p.lon >= w && p.lon <= e && p.lat >= s && p.lat <= n));
   }, [meta, placesLoad]);
 
   useEffect(() => {

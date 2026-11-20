@@ -1,0 +1,57 @@
+{
+ "ramp": {
+  "src": "layers/ramp.tif",
+  "values": {
+   "scale": 0.05,
+   "offset": 0,
+   "nodata": -32768,
+   "unit": "°C",
+   "decimals": 1,
+   "signed": true,
+   "readout": "{v} °C vs the city average"
+  },
+  "style": {
+   "kind": "ramp",
+   "colors": [
+    "#0000ff",
+    "#ffffff",
+    "#ff0000"
+   ],
+   "min": -8,
+   "max": 8,
+   "labels": [
+    "lo",
+    "mid",
+    "hi"
+   ]
+  }
+ },
+ "classes": {
+  "src": "layers/classes.tif",
+  "values": {
+   "scale": 1,
+   "offset": 0,
+   "nodata": 0
+  },
+  "style": {
+   "kind": "classes",
+   "classes": [
+    {
+     "value": 1,
+     "color": "#ff0000",
+     "name": "a"
+    },
+    {
+     "value": 2,
+     "color": "#00ff00",
+     "name": "b"
+    },
+    {
+     "value": 3,
+     "color": "#0000ff",
+     "name": "c"
+    }
+   ]
+  }
+ }
+}

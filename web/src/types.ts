@@ -22,6 +22,51 @@ export interface TradeRow {
   hours: [number, HourStatus][];
 }
 
+/** One everyday activity for the day (scripts/everyday.py): the same go / with care / stop strip as a trade. */
+export interface EverydayRow {
+  key: string;
+  name: string;
+  /** e.g. "Getting around"; one of Everyday.groups */
+  group: string;
+  status: Status;
+  /** e.g. "Best 06-12 h", "With care, not 14-17 h", "Fine all day" */
+  label: string;
+  go_hours: number;
+  windows: string;
+  causes: string[];
+  /** What to do, in plain words. */
+  action: string;
+  /** [hour of day, status] for each hour from Everyday.hours. */
+  hours: [number, HourStatus][];
+}
+
+/** Everyday advice for the public for one day. */
+export interface Everyday {
+  headline: string;
+  /** e.g. "06:00-21:00" */
+  hours: string;
+  groups: string[];
+  rows: EverydayRow[];
+  extras: string[];
+}
+
+/** Public heat advisory for one day (scripts/heat_advisory.py), from forecast WBGT in the sun. */
+export interface HeatAdvisory {
+  /** 0 Low, 1 Moderate, 2 High, 3 Very high, 4 Extreme */
+  level: 0 | 1 | 2 | 3 | 4;
+  name: string;
+  headline: string;
+  peak_wbgt: number | null;
+  peak_hour: number | null;
+  /** Hours at the day's level, e.g. "12-15 h" ("" on a Low day). */
+  window: string;
+  /** Hours at Moderate or above. */
+  risk_hours: string;
+  /** [hour, level] from 06:00. */
+  hours: [number, number][];
+  advice: { key: "workers" | "vendors" | "children" | "elderly"; who: string; text: string }[];
+}
+
 export interface DayFacts {
   rain_mm: number;
   rain_chance: number;
@@ -40,6 +85,10 @@ export interface DayBriefing {
   rows: TradeRow[];
   extras: string[];
   facts: DayFacts;
+  /** Briefings written before the everyday advice was added have none. */
+  everyday?: Everyday;
+  /** Briefings written before the heat advisory was added have none. */
+  heat?: HeatAdvisory;
 }
 
 /** <site>/site_briefing_latest.json */
