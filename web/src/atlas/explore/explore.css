@@ -96,6 +96,16 @@
 .daynight-tag.left { left: 10px; }
 .daynight-tag.right { right: 10px; }
 .explore-card input[type="range"] { max-width: 560px; width: 100%; accent-color: var(--ink); }
+.daynight-place, .daynight-lake {
+  position: absolute; pointer-events: none; white-space: nowrap; font: 600 11.5px var(--f-sans); color: #14161a;
+  text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 2px #fff;
+}
+.daynight-place { padding-left: 9px; transform: translateY(-50%); }
+.daynight-place::before { content: ""; position: absolute; left: -3px; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%; background: #14161a; box-shadow: 0 0 0 1.5px #fff; }
+.daynight-place.big { font-size: 13px; font-weight: 700; }
+.daynight-lake { transform: translate(-50%, -50%); font-style: italic; font-weight: 500; font-size: 12.5px; letter-spacing: .02em; }
+.daynight-scale { position: absolute; left: 10px; bottom: 10px; display: grid; gap: 3px; pointer-events: none; white-space: nowrap; font: 600 11px var(--f-mono); color: #14161a; text-shadow: 0 0 3px #fff, 0 0 3px #fff; }
+.daynight-scale i { display: block; height: 4px; background: #14161a; box-shadow: 0 0 0 1.5px #fff; }
 .daynight-key { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-2); }
 .daynight-key i { width: 22px; height: 10px; border-radius: 3px; }
 .daynight-key i.cool { background: #2f6fc4; margin-left: 0; }
